@@ -216,7 +216,7 @@ task :ci do
   end
 
   # Summary
-  puts "\n" + ('=' * 60)
+  puts "\n#{'=' * 60}"
   if failures.empty?
     puts '🎉 ALL CHECKS PASSED! Your code is ready for production.'
   else
@@ -263,7 +263,7 @@ task :quick do
   end
 
   # Summary
-  puts "\n" + ('=' * 40)
+  puts "\n#{'=' * 40}"
   if failures.empty?
     puts '✅ Quick checks passed!'
   else
