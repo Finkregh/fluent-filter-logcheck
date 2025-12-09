@@ -10,11 +10,19 @@ module Fluent
       module RuleTypes
         extend T::Sig
 
+        # Rule type for ignore patterns (lowest priority)
         IGNORE = T.let(:ignore, Symbol)
+
+        # Rule type for cracking/security patterns (highest priority)
         CRACKING = T.let(:cracking, Symbol)
+
+        # Rule type for violation patterns (medium priority)
         VIOLATIONS = T.let(:violations, Symbol)
 
+        # Array of all valid rule types
         ALL_TYPES = T.let([IGNORE, CRACKING, VIOLATIONS].freeze, T::Array[Symbol])
+
+        # Default priority order for rule types (highest to lowest priority)
         DEFAULT_PRIORITY = T.let([CRACKING, VIOLATIONS, IGNORE].freeze, T::Array[Symbol])
 
         # Rule type detection patterns
@@ -24,9 +32,9 @@ module Fluent
           /violations\.d/ => VIOLATIONS
         }.freeze, T::Hash[Regexp, Symbol])
 
-        # Detect rule type from file path
-        # @param path [String] File or directory path
-        # @return [Symbol, nil] Rule type or nil if not detected
+        # Detect rule type from file path based on directory patterns
+        # @param path [String] File or directory path to analyze
+        # @return [Symbol, nil] Detected rule type or nil if no pattern matches
         sig { params(path: String).returns(T.nilable(Symbol)) }
         def self.detect_from_path(path)
           PATH_PATTERNS.each do |pattern, type|
@@ -35,9 +43,9 @@ module Fluent
           nil
         end
 
-        # Validate rule type
-        # @param type [Symbol] Rule type to validate
-        # @return [Boolean] True if valid rule type
+        # Validate if a given type is a valid rule type
+        # @param type [Object] Rule type to validate
+        # @return [Boolean] True if the type is a valid rule type
         sig { params(type: T.untyped).returns(T::Boolean) }
         def self.valid_type?(type)
           return false unless type.is_a?(Symbol)
@@ -46,8 +54,8 @@ module Fluent
         end
 
         # Get rule type priority (lower number = higher priority)
-        # @param type [Symbol] Rule type
-        # @return [Integer] Priority value
+        # @param type [Object] Rule type to get priority for
+        # @return [Integer] Priority value (0-based index, 999 for invalid types)
         sig { params(type: T.untyped).returns(Integer) }
         def self.priority(type)
           return 999 unless type.is_a?(Symbol)
@@ -55,9 +63,9 @@ module Fluent
           DEFAULT_PRIORITY.index(type) || 999
         end
 
-        # Check if rule type is security-related
-        # @param type [Symbol] Rule type
-        # @return [Boolean] True for cracking and violations
+        # Check if rule type is security-related (generates alerts)
+        # @param type [Object] Rule type to check
+        # @return [Boolean] True for cracking and violations types
         sig { params(type: T.untyped).returns(T::Boolean) }
         def self.security_type?(type)
           return false unless type.is_a?(Symbol)

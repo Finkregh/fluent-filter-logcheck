@@ -1,0 +1,7 @@
+--plugin yard-sorbet
+--hide-void-return
+--no-private
+lib/**/*.rb
+-
+README.md
+CHANGELOG.md

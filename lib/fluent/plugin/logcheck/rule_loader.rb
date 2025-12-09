@@ -13,7 +13,11 @@ module Fluent
         extend T::Sig
 
         # Custom exceptions
+
+        # Error raised when a file or directory is not found
         class FileNotFoundError < StandardError; end
+
+        # Error raised when rule parsing fails
         class ParseError < StandardError; end
 
         sig { params(logger: T.untyped).void }
@@ -23,9 +27,11 @@ module Fluent
 
         # Load rules from a single file
         # @param file_path [String] Path to the rule file
-        # @param rule_type [Symbol] Type of rules (:ignore, :cracking, :violations)
-        # @param max_rules [Integer] Maximum number of rules to load from file
-        # @return [RuleSet] Loaded rule set
+        # @param rule_type [Symbol, nil] Type of rules (:ignore, :cracking, :violations) or nil for auto-detection
+        # @param max_rules [Integer, nil] Maximum number of rules to load from file (nil for no limit)
+        # @return [RuleSet] Loaded rule set containing parsed rules
+        # @raise [FileNotFoundError] If the file does not exist
+        # @raise [ParseError] If rule type cannot be detected
         sig { params(file_path: String, rule_type: T.nilable(Symbol), max_rules: T.nilable(Integer)).returns(RuleSet) }
         def load_file(file_path, rule_type, max_rules: nil)
           raise FileNotFoundError, "File not found: #{file_path}" unless File.exist?(file_path)

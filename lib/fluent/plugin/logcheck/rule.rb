@@ -4,13 +4,22 @@
 require 'sorbet-runtime'
 require_relative 'rule_types'
 
+# Fluent namespace for Fluentd plugins
 module Fluent
+  # Plugin namespace for Fluentd plugins
   module Plugin
+    # Logcheck namespace for logcheck-related classes
     module Logcheck
-      # Custom exceptions for logcheck plugin
+      # Base error class for logcheck plugin
       class LogcheckError < StandardError; end
+
+      # Error raised when regex pattern compilation fails
       class PatternCompileError < LogcheckError; end
+
+      # Error raised when rule loading fails
       class RuleLoadError < LogcheckError; end
+
+      # Error raised when configuration is invalid
       class ConfigurationError < LogcheckError; end
 
       # Represents a single logcheck rule with pattern matching capability
@@ -64,7 +73,7 @@ module Fluent
         end
 
         # Get rule metadata
-        # @return [Hash] Rule metadata
+        # @return [Hash] Rule metadata including type, source file, line number, and pattern
         sig { returns(T::Hash[Symbol, T.untyped]) }
         def metadata
           {
@@ -79,6 +88,7 @@ module Fluent
 
         # Compile the regex pattern with error handling
         # @return [Regexp] Compiled regex pattern
+        # @raise [PatternCompileError] If regex compilation fails
         sig { returns(Regexp) }
         def compile_pattern
           Regexp.new(@raw_pattern)
@@ -119,30 +129,30 @@ module Fluent
         end
 
         # Find first matching rule
-        # @param text [String] Text to match
-        # @return [Rule, nil] First matching rule or nil
+        # @param text [String] Text to match against rules
+        # @return [Rule, nil] First matching rule or nil if no match
         sig { params(text: String).returns(T.nilable(Rule)) }
         def match(text)
           @rules.find { |rule| rule.match?(text) }
         end
 
         # Find all matching rules
-        # @param text [String] Text to match
-        # @return [Array<Rule>] All matching rules
+        # @param text [String] Text to match against rules
+        # @return [Array<Rule>] All matching rules (empty array if no matches)
         sig { params(text: String).returns(T::Array[Rule]) }
         def match_all(text)
           @rules.filter { |rule| rule.match?(text) }
         end
 
         # Get rule count
-        # @return [Integer] Number of rules in set
+        # @return [Integer] Number of rules in this set
         sig { returns(Integer) }
         def size
           @rules.size
         end
 
         # Check if rule set is empty
-        # @return [Boolean] True if no rules
+        # @return [Boolean] True if no rules are loaded
         sig { returns(T::Boolean) }
         def empty?
           @rules.empty?

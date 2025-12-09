@@ -83,6 +83,8 @@ module Fluent
         @rule_priority = T.let([], T::Array[Symbol])
       end
 
+      # Configure the plugin with the provided configuration
+      # @param conf [Fluent::Configuration] The configuration object
       sig { params(conf: T.untyped).void }
       def configure(conf)
         super
@@ -97,6 +99,7 @@ module Fluent
         initialize_components
       end
 
+      # Start the plugin and initialize statistics
       sig { void }
       def start
         super
@@ -113,6 +116,7 @@ module Fluent
         log_rule_summary
       end
 
+      # Shutdown the plugin and log final statistics
       sig { void }
       def shutdown
         super
@@ -120,6 +124,11 @@ module Fluent
         log.info 'Logcheck filter stopped'
       end
 
+      # Filter a log record using logcheck rules
+      # @param _tag [String] The log tag (unused)
+      # @param _time [Time] The log timestamp (unused)
+      # @param record [Hash] The log record to filter
+      # @return [Hash, nil] The filtered record or nil if dropped
       sig { params(_tag: String, _time: T.untyped, record: T::Hash[String, T.untyped]).returns(T.nilable(T::Hash[String, T.untyped])) }
       def filter(_tag, _time, record)
         @statistics[:processed] += 1

@@ -359,7 +359,30 @@ The plugin provides robust error handling:
 - **Parse Errors**: Configurable via `ignore_parse_errors`
 - **Processing Errors**: Returns original record on failure
 
-## Testing
+## Development and Testing
+
+### Quality Assurance Tasks
+
+The project includes comprehensive rake tasks for quality assurance:
+
+```bash
+# Run all quality checks (full CI pipeline)
+bundle exec rake ci
+
+# Run quick checks (tests, linting, type checking)
+bundle exec rake quick
+
+# Run individual checks
+bundle exec rake test           # Test suite
+bundle exec rake rubocop        # Code linting
+bundle exec rake sorbet         # Type checking
+bundle exec rake security       # Security analysis
+bundle exec rake coverage       # Test coverage
+```
+
+See [`docs/rake-tasks.md`](docs/rake-tasks.md) for complete documentation of available tasks.
+
+### Test Suite
 
 Run the test suite:
 
@@ -373,6 +396,16 @@ The plugin includes comprehensive tests:
 - 100% test coverage
 - Performance benchmarks
 - Real logcheck file compatibility tests
+
+### Code Quality
+
+The project maintains high code quality standards:
+
+- **RuboCop**: Code style and quality linting
+- **Sorbet**: Static type checking with gradual typing
+- **Brakeman**: Security vulnerability scanning
+- **SimpleCov**: Test coverage analysis
+- **Bundle Audit**: Dependency vulnerability checking
 
 ## Contributing
 

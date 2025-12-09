@@ -11,8 +11,14 @@ module Fluent
         extend T::Sig
 
         # Decision types
+
+        # Constant representing the ignore decision type
         IGNORE = T.let(:ignore, Symbol)
+
+        # Constant representing the alert decision type
         ALERT = T.let(:alert, Symbol)
+
+        # Constant representing the pass decision type
         PASS = T.let(:pass, Symbol)
 
         sig { returns(Symbol) }

@@ -269,7 +269,7 @@ jobs:
 
       - name: Check documentation coverage
         run: |
-          bundle exec yard stats --list-undoc
+          bundle exec yard stats --list-undoc --fail-on-warning
 
   notify:
     name: Notification

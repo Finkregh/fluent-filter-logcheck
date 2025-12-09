@@ -46,7 +46,7 @@ module Fluent
           rule_sets.each { |rule_set| add_rule_set(rule_set) }
         end
 
-        # Clear all rule sets
+        # Clear all rule sets from the engine
         sig { void }
         def clear_rule_sets
           @rule_sets.clear
@@ -54,14 +54,14 @@ module Fluent
         end
 
         # Get the number of loaded rule sets
-        # @return [Integer] Number of rule sets
+        # @return [Integer] Number of rule sets currently loaded
         sig { returns(Integer) }
         def rule_set_count
           @rule_sets.size
         end
 
         # Get the total number of rules across all rule sets
-        # @return [Integer] Total number of rules
+        # @return [Integer] Total number of rules across all loaded rule sets
         sig { returns(Integer) }
         def total_rule_count
           @rule_sets.sum(&:size)
@@ -69,7 +69,7 @@ module Fluent
 
         # Apply filtering logic to a log message
         # @param message [String] The log message to filter
-        # @return [FilterDecision] The filtering decision
+        # @return [FilterDecision] The filtering decision based on rule matches
         sig { params(message: String).returns(FilterDecision) }
         def filter(message)
           @stats[:total_messages] = T.cast(@stats[:total_messages], Integer) + 1
@@ -93,13 +93,13 @@ module Fluent
         end
 
         # Get filtering statistics
-        # @return [Hash] Statistics about filtering operations
+        # @return [Hash] Statistics about filtering operations including message counts and rule matches
         sig { returns(T::Hash[Symbol, T.untyped]) }
         def statistics
           @stats.dup
         end
 
-        # Reset statistics
+        # Reset all filtering statistics to zero
         sig { void }
         def reset_statistics
           @stats = {
@@ -114,8 +114,8 @@ module Fluent
         private
 
         # Find all rules that match the given message
-        # @param message [String] The log message
-        # @return [Array<Rule>] Array of matching rules
+        # @param message [String] The log message to match against
+        # @return [Array<Rule>] Array of matching rules from all rule sets
         sig { params(message: String).returns(T::Array[T.untyped]) }
         def find_matching_rules(message)
           matching_rules = T.let([], T::Array[T.untyped])
@@ -134,8 +134,8 @@ module Fluent
 
         # Apply rule precedence to determine the final decision
         # @param matching_rules [Array<Rule>] Array of matching rules
-        # @param message [String] The log message
-        # @return [FilterDecision] The final decision
+        # @param message [String] The log message being processed
+        # @return [FilterDecision] The final decision based on highest precedence rule
         sig { params(matching_rules: T::Array[T.untyped], message: String).returns(FilterDecision) }
         def apply_rule_precedence(matching_rules, message)
           # Sort rules by precedence (highest first)
