@@ -8,6 +8,9 @@ require 'fluent/test'
 require 'fluent/test/driver/filter'
 require 'fluent/test/helpers'
 
+# Load test support files
+require_relative 'support/rule_file_helpers'
+
 # Enable coverage if requested
 if ENV['COVERAGE']
   require 'simplecov'
@@ -42,12 +45,20 @@ if ENV['COVERAGE']
                                                          ])
     end
 
-    # Set minimum coverage thresholds (adjusted for current codebase)
-    minimum_coverage 30
-    minimum_coverage_by_file 20
+    # Set minimum coverage thresholds (temporarily lowered to see progress)
+    minimum_coverage 40
+    minimum_coverage_by_file 25
 
     # Track branches for more detailed coverage
     enable_coverage :branch
+
+    # Coverage groups for better reporting
+    add_group 'Core Plugin', 'lib/fluent/plugin/filter_logcheck.rb'
+    add_group 'Rule Engine', 'lib/fluent/plugin/logcheck/rule_engine.rb'
+    add_group 'Rule Loading', 'lib/fluent/plugin/logcheck/rule_loader.rb'
+    add_group 'Rule Classes', ['lib/fluent/plugin/logcheck/rule.rb',
+                               'lib/fluent/plugin/logcheck/rule_types.rb']
+    add_group 'Decisions', 'lib/fluent/plugin/logcheck/filter_decision.rb'
   end
 
   # Add at_exit hook to manually generate XML if needed
@@ -163,3 +174,4 @@ end
 
 # Include test utilities in all test cases
 Test::Unit::TestCase.include(TestUtils)
+Test::Unit::TestCase.include(RuleFileHelpers)

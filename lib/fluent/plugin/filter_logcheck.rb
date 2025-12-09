@@ -38,8 +38,8 @@ module Fluent
       config_param :rules_dir, :string, default: nil
 
       # Advanced rule configuration
-      config_section :rules, param_name: :rule_configs, multi: true do
-        config_param :path, :string
+      config_section :rules, param_name: :rule_configs, multi: true, required: false do
+        config_param :path, :string, default: nil
         config_param :type, :enum, list: %i(ignore cracking violations), default: nil
         config_param :recursive, :bool, default: true
       end
@@ -214,8 +214,11 @@ module Fluent
       sig { void }
       def validate_rules_sections
         @rule_configs.each_with_index do |rule_config, index|
-          # Validate path is specified and not empty
-          raise Fluent::ConfigError, "rules section #{index + 1}: path cannot be empty" if rule_config.path.nil? || rule_config.path.strip.empty?
+          # Skip validation if no path is provided (empty rules section)
+          next if rule_config.path.nil?
+
+          # Validate path is not empty if provided
+          raise Fluent::ConfigError, "rules section #{index + 1}: path cannot be empty" if rule_config.path.strip.empty?
 
           # Validate type if specified
           if rule_config.type && !Logcheck::RuleTypes::ALL_TYPES.include?(rule_config.type)
@@ -257,7 +260,7 @@ module Fluent
         if @rules_file
           log.debug "Loading rules from file: #{@rules_file}" if @debug_mode
           begin
-            rule_set = rule_loader.load_file(@rules_file, :ignore, max_rules: @max_rules_per_file)
+            rule_set = rule_loader.load_file(@rules_file, nil, max_rules: @max_rules_per_file)
             @rule_sets[@rules_file] = rule_set
             log.info "Loaded #{rule_set.size} rules from file: #{@rules_file}"
           rescue Logcheck::RuleLoader::FileNotFoundError => e
@@ -293,6 +296,9 @@ module Fluent
       def load_advanced_rule_sources(rule_loader)
         @rule_configs.each_with_index do |rule_config, index|
           path = rule_config.path
+          # Skip if no path is provided (empty rules section)
+          next if path.nil?
+
           type = rule_config.type
           recursive = rule_config.recursive
 

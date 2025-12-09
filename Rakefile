@@ -1,14 +1,17 @@
 # frozen_string_literal: true
 
+require 'bundler'
 require 'bundler/gem_tasks'
 require 'rake/testtask'
 require 'rubocop/rake_task'
 require 'yard'
+Bundler::GemHelper.install_tasks
 
 Rake::TestTask.new(:test) do |test|
-  test.libs << 'lib' << 'test'
+  test.libs.push('lib', 'test')
   test.pattern = 'test/**/test_*.rb'
   test.verbose = true
+  test.warning = true
   # Suppress warnings during test runs
   test.ruby_opts = ['-W0']
 end
@@ -18,8 +21,8 @@ task default: :test
 desc 'Run RuboCop on all files'
 RuboCop::RakeTask.new(:rubocop) do |task|
   task.patterns = ['lib/**/*.rb', 'test/**/*.rb']
-  # don't abort rake on failure
-  task.fail_on_error = false
+  task.options = ['--fail-level', 'I']
+  task.fail_on_error = true
 end
 
 desc 'Run RuboCop on lib directory'
