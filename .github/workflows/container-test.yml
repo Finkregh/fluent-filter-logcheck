@@ -1,0 +1,114 @@
+name: Container Test
+
+on:
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  container-test:
+    name: Build and Test Container
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build container
+        run: |
+          echo "Building container from test/Dockerfile..."
+          docker build -t fluent-logcheck-test -f test/Dockerfile .
+
+      - name: Run container with timeout and capture logs
+        id: run_container
+        run: |
+          echo "Starting container with 5-second timeout for no output..."
+
+          # Create a named pipe for log capture
+          mkfifo container_logs.pipe
+
+          # Start container in background and redirect output to pipe
+          docker run --rm fluent-logcheck-test -c /fluentd/etc/fluentd-test.conf > container_logs.pipe 2>&1 &
+          CONTAINER_PID=$!
+
+          # Read from pipe with timeout
+          timeout 30s bash -c '
+            last_output_time=$(date +%s)
+            while IFS= read -r line; do
+              echo "$line"
+              echo "$line" >> container_output.log
+              last_output_time=$(date +%s)
+            done < container_logs.pipe &
+            READER_PID=$!
+            
+            # Monitor for 5 seconds of no output
+            while kill -0 $READER_PID 2>/dev/null; do
+              current_time=$(date +%s)
+              if [ $((current_time - last_output_time)) -ge 5 ]; then
+                echo "No output for 5 seconds, stopping container..."
+                break
+              fi
+              sleep 1
+            done
+            
+            # Kill the reader process
+            kill $READER_PID 2>/dev/null || true
+          ' || true
+
+          # Stop the container
+          docker stop $(docker ps -q --filter ancestor=fluent-logcheck-test) 2>/dev/null || true
+
+          # Clean up
+          rm -f container_logs.pipe
+
+          echo "Container execution completed."
+
+      - name: Display captured logs
+        run: |
+          echo "=== CAPTURED CONTAINER LOGS ==="
+          if [ -f container_output.log ]; then
+            cat container_output.log
+          else
+            echo "No logs captured"
+          fi
+          echo "=== END OF LOGS ==="
+
+      - name: Analyze logs for required patterns
+        run: |
+          echo "Analyzing logs for required patterns..."
+
+          if [ ! -f container_output.log ]; then
+            echo "❌ ERROR: No log file found"
+            exit 1
+          fi
+
+          # Check that logs do NOT contain the ssh error message
+          if grep -q "fatal: recv_rexec_state: ssh_msg_recv failed" container_output.log; then
+            echo "❌ FAIL: Logs contain forbidden message: 'fatal: recv_rexec_state: ssh_msg_recv failed'"
+            echo "This message should be filtered out by the logcheck plugin."
+            exit 1
+          else
+            echo "✅ PASS: Logs do not contain forbidden ssh error message"
+          fi
+
+          # Check that logs DO contain the expected fatal message
+          if grep -q "fatal: some other message" container_output.log; then
+            echo "✅ PASS: Logs contain expected message: 'fatal: some other message'"
+          else
+            echo "❌ FAIL: Logs do not contain expected message: 'fatal: some other message'"
+            echo "Expected to find this message in the output."
+            exit 1
+          fi
+
+          echo "🎉 All log pattern checks passed!"
+
+      - name: Upload logs as artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: container-logs
+          path: container_output.log
+          retention-days: 7
