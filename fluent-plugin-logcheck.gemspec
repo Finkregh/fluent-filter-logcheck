@@ -6,8 +6,8 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 Gem::Specification.new do |spec|
   spec.name          = 'fluent-plugin-logcheck'
   spec.version       = '1.0.0'
-  spec.authors       = ['Fluentd Logcheck Plugin Developer']
-  spec.email         = ['developer@example.com']
+  spec.authors       = ['Oluf Lorenzen']
+  spec.email         = ['finkregh+githubfluentdlogecheck@mafia-server.net']
 
   spec.summary       = 'Fluentd filter plugin that applies logcheck rules for log filtering and security monitoring'
   spec.description   = 'A Fluentd filter plugin that implements logcheck functionality, allowing users to filter and categorize log entries based on predefined regular expression rules. Supports ignore, cracking, and violations rule types with proper precedence handling.'

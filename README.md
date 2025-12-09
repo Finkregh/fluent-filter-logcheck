@@ -1,18 +1,3 @@
-add type checks with sorbet
-
-read docs at @knowlege/docs/sorbet-sig.md
-
-1. Check whether the constants in the sorbet/rbi/todo.rbi file actually exist in your project.
-  It is possible that some of these constants are typos, and leaving them in todo.rbi will
-  hide errors in your application. Ideally, you should be able to remove all definitions
-  from this file and delete it.
-
-1. Typecheck your project:
-
-  bundle exec srb tc
-
-  There should not be any typechecking errors.
-
 # Fluent Filter Logcheck Plugin
 
 A powerful Fluentd filter plugin that applies logcheck rules for intelligent log filtering and alerting. This plugin enables you to use existing logcheck rule files to automatically filter out noise from your logs while highlighting important security events and system violations.
