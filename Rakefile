@@ -8,6 +8,8 @@ Rake::TestTask.new(:test) do |test|
   test.libs << 'lib' << 'test'
   test.pattern = 'test/**/test_*.rb'
   test.verbose = true
+  # Suppress warnings during test runs
+  test.ruby_opts = ['-W0']
 end
 
 task default: :test
@@ -57,6 +59,8 @@ end
 desc 'Run tests with coverage'
 task :coverage do
   ENV['COVERAGE'] = 'true'
+  # Suppress warnings during coverage runs too
+  ENV['RUBYOPT'] = '-W0'
   Rake::Task[:test].invoke
 end
 

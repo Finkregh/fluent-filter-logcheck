@@ -85,7 +85,7 @@ class RuleEngineTest < Test::Unit::TestCase
 
   sub_test_case 'filtering with ignore rules' do
     define_method(:setup) do
-      super
+      super()
       @engine.add_rule_set(@ignore_rule_set)
     end
 
@@ -122,7 +122,7 @@ class RuleEngineTest < Test::Unit::TestCase
 
   sub_test_case 'filtering with cracking rules' do
     define_method(:setup) do
-      super
+      super()
       @engine.add_rule_set(@cracking_rule_set)
     end
 
@@ -151,7 +151,7 @@ class RuleEngineTest < Test::Unit::TestCase
 
   sub_test_case 'filtering with violations rules' do
     define_method(:setup) do
-      super
+      super()
       @engine.add_rule_set(@violations_rule_set)
     end
 
@@ -167,7 +167,7 @@ class RuleEngineTest < Test::Unit::TestCase
 
   sub_test_case 'rule precedence' do
     define_method(:setup) do
-      super
+      super()
       @engine.add_rule_sets([@ignore_rule_set, @cracking_rule_set, @violations_rule_set])
     end
 
@@ -222,7 +222,7 @@ class RuleEngineTest < Test::Unit::TestCase
 
   sub_test_case 'statistics' do
     define_method(:setup) do
-      super
+      super()
       @engine.add_rule_sets([@ignore_rule_set, @cracking_rule_set])
     end
 

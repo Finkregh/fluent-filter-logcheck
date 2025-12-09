@@ -38,24 +38,30 @@ module Fluent
         # Validate rule type
         # @param type [Symbol] Rule type to validate
         # @return [Boolean] True if valid rule type
-        sig { params(type: Symbol).returns(T::Boolean) }
+        sig { params(type: T.untyped).returns(T::Boolean) }
         def self.valid_type?(type)
+          return false unless type.is_a?(Symbol)
+
           ALL_TYPES.include?(type)
         end
 
         # Get rule type priority (lower number = higher priority)
         # @param type [Symbol] Rule type
         # @return [Integer] Priority value
-        sig { params(type: Symbol).returns(Integer) }
+        sig { params(type: T.untyped).returns(Integer) }
         def self.priority(type)
+          return 999 unless type.is_a?(Symbol)
+
           DEFAULT_PRIORITY.index(type) || 999
         end
 
         # Check if rule type is security-related
         # @param type [Symbol] Rule type
         # @return [Boolean] True for cracking and violations
-        sig { params(type: Symbol).returns(T::Boolean) }
+        sig { params(type: T.untyped).returns(T::Boolean) }
         def self.security_type?(type)
+          return false unless type.is_a?(Symbol)
+
           [CRACKING, VIOLATIONS].include?(type)
         end
       end

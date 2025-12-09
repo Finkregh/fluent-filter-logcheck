@@ -47,7 +47,7 @@ module Fluent
         # Test if rule matches given text
         # @param text [String] Text to match against
         # @return [Boolean] True if pattern matches
-        sig { params(text: T.nilable(String)).returns(T::Boolean) }
+        sig { params(text: T.untyped).returns(T::Boolean) }
         def match?(text)
           return false if text.nil?
 
@@ -131,7 +131,7 @@ module Fluent
         # @return [Array<Rule>] All matching rules
         sig { params(text: String).returns(T::Array[Rule]) }
         def match_all(text)
-          @rules.grep(text)
+          @rules.filter { |rule| rule.match?(text) }
         end
 
         # Get rule count
