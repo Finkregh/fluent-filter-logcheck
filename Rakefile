@@ -18,8 +18,8 @@ task default: :test
 desc 'Run RuboCop on all files'
 RuboCop::RakeTask.new(:rubocop) do |task|
   task.patterns = ['lib/**/*.rb', 'test/**/*.rb']
-  # don't abort rake on failure
-  task.fail_on_error = false
+  task.options = ['--fail-level', 'I']
+  task.fail_on_error = true
 end
 
 desc 'Run RuboCop on lib directory'

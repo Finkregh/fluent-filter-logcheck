@@ -2,10 +2,13 @@
 # frozen_string_literal: true
 
 require_relative '../helper'
+require_relative '../support/rule_file_helpers'
 require 'fluent/plugin/logcheck/rule_engine'
 require 'fluent/plugin/logcheck/rule_loader'
 
 class RuleEngineIntegrationTest < Test::Unit::TestCase
+  include RuleFileHelpers
+
   def setup
     @temp_dir = Dir.mktmpdir('rule_engine_integration_test')
     setup_test_rules
@@ -359,8 +362,6 @@ class RuleEngineIntegrationTest < Test::Unit::TestCase
       assert_equal 0, engine.total_rule_count
     end
   end
-
-  private
 
   # Simple test logger for capturing log messages
   class TestLogger

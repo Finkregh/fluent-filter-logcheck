@@ -29,7 +29,10 @@ module Fluent
         PATH_PATTERNS = T.let({
           /ignore\.d/ => IGNORE,
           /cracking\.d/ => CRACKING,
-          /violations\.d/ => VIOLATIONS
+          /violations\.d/ => VIOLATIONS,
+          /ignore\.rules?$/ => IGNORE,
+          /cracking\.rules?$/ => CRACKING,
+          /violations\.rules?$/ => VIOLATIONS
         }.freeze, T::Hash[Regexp, Symbol])
 
         # Detect rule type from file path based on directory patterns

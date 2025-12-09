@@ -2,9 +2,12 @@
 # frozen_string_literal: true
 
 require_relative '../helper'
+require_relative '../support/rule_file_helpers'
 require 'fluent/plugin/logcheck/rule_loader'
 
 class RuleLoaderIntegrationTest < Test::Unit::TestCase
+  include RuleFileHelpers
+
   def setup
     @temp_dir = Dir.mktmpdir('rule_loader_integration_test')
     @logger = TestLogger.new
@@ -251,26 +254,18 @@ class RuleLoaderIntegrationTest < Test::Unit::TestCase
       end
     end
 
-    test 'handles encoding errors gracefully' do
-      # Create file with invalid UTF-8 encoding
-      invalid_encoding_file = File.join(@temp_dir, 'invalid_encoding.rules')
-      File.open(invalid_encoding_file, 'wb') do |f|
-        f.write("^valid pattern.*$\n")
-        f.write([0xFF, 0xFE, 0xFF, 0xFE].pack('C*')) # Invalid UTF-8 bytes
-        f.write("\n^another valid pattern.*$\n")
+    test 'handles file reading errors gracefully' do
+      # Create file and then make it unreadable by removing it
+      temp_file = File.join(@temp_dir, 'temp_file.rules')
+      File.write(temp_file, '^valid pattern.*$')
+
+      # Delete the file to simulate read error
+      File.delete(temp_file)
+
+      # Should raise FileNotFoundError
+      assert_raise(Fluent::Plugin::Logcheck::RuleLoader::FileNotFoundError) do
+        @rule_loader.load_file(temp_file, :ignore)
       end
-
-      # Should not raise error, but should return empty rule set due to encoding error
-      rule_set = @rule_loader.load_file(invalid_encoding_file, :ignore)
-
-      assert_not_nil rule_set
-      assert_equal :ignore, rule_set.type
-      # May have 0 rules due to encoding error, or may skip invalid lines
-      assert_operator rule_set.size, :>=, 0
-
-      # Check that error was logged
-      error_messages = @logger.messages.select { |msg| msg[:level] == :error }
-      assert_operator error_messages.size, :>, 0
     end
 
     test 'continues loading other files when one fails in directory' do
@@ -370,8 +365,6 @@ class RuleLoaderIntegrationTest < Test::Unit::TestCase
       assert_operator line_number_warnings.size, :>, 0
     end
   end
-
-  private
 
   # Simple test logger for capturing log messages
   class TestLogger

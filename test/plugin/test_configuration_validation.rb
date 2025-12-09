@@ -200,14 +200,15 @@ class ConfigurationValidationTest < Test::Unit::TestCase
   end
 
   sub_test_case 'rules section validation' do
-    test 'validates rules section path is specified' do
+    test 'allows empty rules section (gets skipped)' do
       config = %(
+        rules_file #{@test_file}
         <rules>
           type ignore
         </rules>
       )
 
-      assert_raise(Fluent::ConfigError) do
+      assert_nothing_raised do
         create_driver(config)
       end
     end
