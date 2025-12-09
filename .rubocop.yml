@@ -15,6 +15,7 @@ AllCops:
     - "coverage/**/*"
     - "pkg/**/*"
     - "tmp/**/*"
+    - "sorbet/**/*"
 
 # Gemspec cops
 Gemspec/AddRuntimeDependency:

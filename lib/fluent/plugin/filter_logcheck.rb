@@ -63,7 +63,7 @@ module Fluent
                               start_time: nil
                             }, T::Hash[Symbol, T.untyped])
         @last_stats_log = T.let(nil, T.nilable(Time))
-        
+
         # Declare configuration variables
         @match_field = T.let('', String)
         @default_action = T.let(:keep, Symbol)

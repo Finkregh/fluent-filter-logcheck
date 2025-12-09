@@ -131,7 +131,7 @@ module Fluent
         # @return [Array<Rule>] All matching rules
         sig { params(text: String).returns(T::Array[Rule]) }
         def match_all(text)
-          @rules.select { |rule| rule.match?(text) }
+          @rules.grep(text)
         end
 
         # Get rule count

@@ -9,6 +9,7 @@ group :development, :test do
   gem 'brakeman', '~> 6.0'
   gem 'bundler', '~> 2.0'
   gem 'bundler-audit', '~> 0.8'
+  gem 'openssl', '~> 3.3.2', require: false # macOS OpenSSL compatibility
   gem 'rake', '~> 13.0'
   gem 'rubocop', '~> 1.0'
   gem 'rubocop-packaging', '~> 0.6'
@@ -19,7 +20,6 @@ group :development, :test do
   gem 'simplecov-cobertura', '~> 2.1'
   gem 'sorbet', '~> 0.5'
   gem 'sorbet-runtime', '~> 0.5'
-  gem 'test-unit', '~> 3.0'
   gem 'tapioca', require: false
-  gem 'openssl', '~> 3.3.2', require: false # macOS OpenSSL compatibility
+  gem 'test-unit', '~> 3.0'
 end
