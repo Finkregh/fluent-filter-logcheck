@@ -1,8 +1,8 @@
 # typed: false
 # frozen_string_literal: true
 
-require_relative "../helper"
-require "fluent/plugin/filter_logcheck"
+require_relative '../helper'
+require 'fluent/plugin/filter_logcheck'
 
 class FilterLogcheckTest < Test::Unit::TestCase
   include Fluent::Test::Helpers
@@ -24,7 +24,7 @@ class FilterLogcheckTest < Test::Unit::TestCase
 
   def test_plugin_registration
     # Test that the plugin is properly registered
-    assert_not_nil Fluent::Plugin.new_filter("logcheck")
+    assert_not_nil Fluent::Plugin.new_filter('logcheck')
   end
 
   def test_basic_configuration
@@ -37,7 +37,7 @@ class FilterLogcheckTest < Test::Unit::TestCase
 
     d = create_driver(config)
     assert_not_nil d.instance
-    assert_equal "message", d.instance.match_field
+    assert_equal 'message', d.instance.match_field
     assert_equal :keep, d.instance.default_action
   end
 
@@ -98,9 +98,9 @@ class FilterLogcheckTest < Test::Unit::TestCase
 
     d = create_driver(config)
     assert_not_nil d.instance
-    assert_equal "message", d.instance.match_field
+    assert_equal 'message', d.instance.match_field
     assert_true d.instance.mark_matches
-    assert_equal "logcheck_", d.instance.mark_field_prefix
+    assert_equal 'logcheck_', d.instance.mark_field_prefix
     assert_equal %i(cracking violations ignore), d.instance.rule_priority
   end
 
@@ -113,10 +113,10 @@ class FilterLogcheckTest < Test::Unit::TestCase
     d = create_driver(config)
     instance = d.instance
 
-    assert_equal "message", instance.match_field
+    assert_equal 'message', instance.match_field
     assert_equal :keep, instance.default_action
     assert_false instance.mark_matches
-    assert_equal "logcheck_", instance.mark_field_prefix
+    assert_equal 'logcheck_', instance.mark_field_prefix
     assert_equal 1000, instance.cache_size
     assert_true instance.recursive_scan
     assert_true instance.ignore_parse_errors
@@ -135,13 +135,13 @@ class FilterLogcheckTest < Test::Unit::TestCase
     d = create_driver(config)
 
     # Since we haven't implemented rule loading yet, this should just pass through
-    d.run(default_tag: "test") do
-      d.feed(event_time, { "message" => "test log message" })
+    d.run(default_tag: 'test') do
+      d.feed(event_time, { 'message' => 'test log message' })
     end
 
     records = d.filtered_records
     assert_equal 1, records.size
-    assert_equal "test log message", records.first["message"]
+    assert_equal 'test log message', records.first['message']
   end
 
   def test_filter_with_different_match_fields
@@ -154,13 +154,13 @@ class FilterLogcheckTest < Test::Unit::TestCase
 
     d = create_driver(config)
 
-    d.run(default_tag: "test") do
-      d.feed(event_time, { "log_text" => "test message", "other_field" => "value" })
+    d.run(default_tag: 'test') do
+      d.feed(event_time, { 'log_text' => 'test message', 'other_field' => 'value' })
     end
 
     records = d.filtered_records
     assert_equal 1, records.size
-    assert_equal "test message", records.first["log_text"]
+    assert_equal 'test message', records.first['log_text']
   end
 
   def test_filter_with_missing_match_field
@@ -173,13 +173,13 @@ class FilterLogcheckTest < Test::Unit::TestCase
 
     d = create_driver(config)
 
-    d.run(default_tag: "test") do
-      d.feed(event_time, { "other_field" => "value" })
+    d.run(default_tag: 'test') do
+      d.feed(event_time, { 'other_field' => 'value' })
     end
 
     records = d.filtered_records
     assert_equal 1, records.size
-    assert_equal "value", records.first["other_field"]
+    assert_equal 'value', records.first['other_field']
   end
 
   def test_filter_error_handling
@@ -192,8 +192,8 @@ class FilterLogcheckTest < Test::Unit::TestCase
     d = create_driver(config)
 
     # This should not raise an error even with our skeleton implementation
-    d.run(default_tag: "test") do
-      d.feed(event_time, { "message" => "test" })
+    d.run(default_tag: 'test') do
+      d.feed(event_time, { 'message' => 'test' })
     end
 
     records = d.filtered_records
@@ -208,7 +208,7 @@ class FilterLogcheckTest < Test::Unit::TestCase
     )
 
     d = create_driver(config)
-    assert_equal "/etc/logcheck/ignore.d.server", d.instance.rules_dir
+    assert_equal '/etc/logcheck/ignore.d.server', d.instance.rules_dir
   end
 
   def test_configuration_with_both_file_and_dir
@@ -221,8 +221,8 @@ class FilterLogcheckTest < Test::Unit::TestCase
 
     # Should not raise an error - both can be specified
     d = create_driver(config)
-    assert_equal "/tmp/test_rules", d.instance.rules_file
-    assert_equal "/etc/logcheck/ignore.d.server", d.instance.rules_dir
+    assert_equal '/tmp/test_rules', d.instance.rules_file
+    assert_equal '/etc/logcheck/ignore.d.server', d.instance.rules_dir
   end
 
   private

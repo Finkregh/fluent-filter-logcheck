@@ -1,9 +1,9 @@
 # typed: strict
 # frozen_string_literal: true
 
-require "sorbet-runtime"
-require_relative "rule_types"
-require_relative "rule"
+require 'sorbet-runtime'
+require_relative 'rule_types'
+require_relative 'rule'
 
 module Fluent
   module Plugin
@@ -17,7 +17,6 @@ module Fluent
         class ParseError < StandardError; end
 
         sig { params(logger: T.nilable(T.untyped)).void }
-
         def initialize(logger: nil)
           @logger = T.let(logger, T.nilable(T.untyped))
         end
@@ -28,7 +27,6 @@ module Fluent
         # @param max_rules [Integer] Maximum number of rules to load from file
         # @return [RuleSet] Loaded rule set
         sig { params(file_path: String, rule_type: T.nilable(Symbol), max_rules: T.nilable(Integer)).returns(RuleSet) }
-
         def load_file(file_path, rule_type, max_rules: nil)
           raise FileNotFoundError, "File not found: #{file_path}" unless File.exist?(file_path)
 
@@ -41,7 +39,7 @@ module Fluent
           rules = T.let([], T::Array[Rule])
           line_number = 0
 
-          File.foreach(file_path, encoding: "UTF-8") do |line|
+          File.foreach(file_path, encoding: 'UTF-8') do |line|
             line_number += 1
 
             # Skip if we've reached the maximum rules limit
@@ -82,14 +80,13 @@ module Fluent
           params(dir_path: String, rule_type: T.nilable(Symbol), recursive: T::Boolean,
                  max_rules: T.nilable(Integer)).returns(T::Array[RuleSet])
         end
-
         def load_directory(dir_path, rule_type, recursive: true, max_rules: nil)
           raise FileNotFoundError, "Directory not found: #{dir_path}" unless Dir.exist?(dir_path)
 
           log_info "Loading rules from directory: #{dir_path} (recursive: #{recursive})"
 
           rule_sets = T.let([], T::Array[RuleSet])
-          pattern = recursive ? File.join(dir_path, "**", "*") : File.join(dir_path, "*")
+          pattern = recursive ? File.join(dir_path, '**', '*') : File.join(dir_path, '*')
 
           Dir.glob(pattern).each do |file_path|
             next unless File.file?(file_path)
@@ -118,10 +115,9 @@ module Fluent
         # @param line [String] Raw line from file
         # @return [String] Cleaned line
         sig { params(line: String).returns(String) }
-
         def clean_line(line)
           # Remove comments (lines starting with #)
-          line = line.sub(/#.*$/, "")
+          line = line.sub(/#.*$/, '')
           # Remove leading and trailing whitespace
           line.strip
         end
@@ -130,7 +126,6 @@ module Fluent
         # @param file_path [String] Path to the file
         # @return [Symbol, nil] Detected rule type or nil
         sig { params(file_path: String).returns(T.nilable(Symbol)) }
-
         def detect_rule_type(file_path)
           RuleTypes.detect_from_path(file_path)
         end
@@ -139,13 +134,12 @@ module Fluent
         # @param file_path [String] Path to the file
         # @return [Boolean] True if file should be skipped
         sig { params(file_path: String).returns(T::Boolean) }
-
         def should_skip_file?(file_path)
           filename = File.basename(file_path)
 
           # Skip hidden files, backup files, and common non-rule files
-          return true if filename.start_with?(".")
-          return true if filename.end_with?("~", ".bak", ".orig", ".tmp")
+          return true if filename.start_with?('.')
+          return true if filename.end_with?('~', '.bak', '.orig', '.tmp')
           return true if filename.match?(/\.(log|txt|md|yml|yaml|json|xml)$/i)
 
           false
@@ -153,19 +147,16 @@ module Fluent
 
         # Logging helpers
         sig { params(message: String).void }
-
         def log_info(message)
           @logger&.info(message)
         end
 
         sig { params(message: String).void }
-
         def log_warning(message)
           @logger&.warn(message)
         end
 
         sig { params(message: String).void }
-
         def log_error(message)
           @logger&.error(message)
         end

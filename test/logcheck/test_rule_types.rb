@@ -1,8 +1,8 @@
 # typed: false
 # frozen_string_literal: true
 
-require_relative "../helper"
-require "fluent/plugin/logcheck/rule_types"
+require_relative '../helper'
+require 'fluent/plugin/logcheck/rule_types'
 
 class RuleTypesTest < Test::Unit::TestCase
   def test_constants_defined
@@ -27,10 +27,10 @@ class RuleTypesTest < Test::Unit::TestCase
   def test_detect_from_path_ignore
     # Test ignore rule detection from various paths
     ignore_paths = [
-      "/etc/logcheck/ignore.d.server/ssh",
-      "/path/to/ignore.d.paranoid/kernel",
-      "ignore.d.workstation/systemd",
-      "/home/user/rules/ignore.d/custom",
+      '/etc/logcheck/ignore.d.server/ssh',
+      '/path/to/ignore.d.paranoid/kernel',
+      'ignore.d.workstation/systemd',
+      '/home/user/rules/ignore.d/custom'
     ]
 
     ignore_paths.each do |path|
@@ -42,10 +42,10 @@ class RuleTypesTest < Test::Unit::TestCase
   def test_detect_from_path_cracking
     # Test cracking rule detection from various paths
     cracking_paths = [
-      "/etc/logcheck/cracking.d/ssh",
-      "/path/to/cracking.d/kernel",
-      "cracking.d/custom",
-      "/home/user/rules/cracking.d/security",
+      '/etc/logcheck/cracking.d/ssh',
+      '/path/to/cracking.d/kernel',
+      'cracking.d/custom',
+      '/home/user/rules/cracking.d/security'
     ]
 
     cracking_paths.each do |path|
@@ -57,10 +57,10 @@ class RuleTypesTest < Test::Unit::TestCase
   def test_detect_from_path_violations
     # Test violations rule detection from various paths
     violations_paths = [
-      "/etc/logcheck/violations.d/kernel",
-      "/path/to/violations.d/system",
-      "violations.d/custom",
-      "/home/user/rules/violations.d/errors",
+      '/etc/logcheck/violations.d/kernel',
+      '/path/to/violations.d/system',
+      'violations.d/custom',
+      '/home/user/rules/violations.d/errors'
     ]
 
     violations_paths.each do |path|
@@ -72,10 +72,10 @@ class RuleTypesTest < Test::Unit::TestCase
   def test_detect_from_path_unknown
     # Test unknown path handling
     unknown_paths = [
-      "/unknown/path/file",
-      "/etc/logcheck/unknown.d/test",
-      "random_file.txt",
-      "/path/without/type/indicator",
+      '/unknown/path/file',
+      '/etc/logcheck/unknown.d/test',
+      'random_file.txt',
+      '/path/without/type/indicator'
     ]
 
     unknown_paths.each do |path|
@@ -94,7 +94,7 @@ class RuleTypesTest < Test::Unit::TestCase
 
   def test_invalid_type
     # Test rule type validation for invalid types
-    invalid_types = [:unknown, :invalid, nil, "", "string", 123]
+    invalid_types = [:unknown, :invalid, nil, '', 'string', 123]
 
     invalid_types.each do |type|
       assert_false Fluent::Plugin::Logcheck::RuleTypes.valid_type?(type),

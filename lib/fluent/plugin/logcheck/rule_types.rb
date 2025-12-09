@@ -1,7 +1,7 @@
 # typed: strict
 # frozen_string_literal: true
 
-require "sorbet-runtime"
+require 'sorbet-runtime'
 
 module Fluent
   module Plugin
@@ -21,7 +21,7 @@ module Fluent
         PATH_PATTERNS = T.let({
           /ignore\.d/ => IGNORE,
           /cracking\.d/ => CRACKING,
-          /violations\.d/ => VIOLATIONS,
+          /violations\.d/ => VIOLATIONS
         }.freeze, T::Hash[Regexp, Symbol])
 
         # Detect rule type from file path

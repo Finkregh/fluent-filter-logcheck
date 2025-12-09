@@ -1,7 +1,7 @@
 # typed: strict
 # frozen_string_literal: true
 
-require "sorbet-runtime"
+require 'sorbet-runtime'
 
 module Fluent
   module Plugin
@@ -32,7 +32,6 @@ module Fluent
         # @param rule [Rule, nil] The rule that matched (if any)
         # @param message [String] The original log message
         sig { params(decision: Symbol, rule: T.nilable(T.untyped), message: String).void }
-
         def initialize(decision, rule, message)
           @decision = decision
           @rule = rule
@@ -43,7 +42,6 @@ module Fluent
         # Check if the decision is to ignore the message
         # @return [Boolean] True if message should be ignored
         sig { returns(T::Boolean) }
-
         def ignore?
           @decision == IGNORE
         end
@@ -51,7 +49,6 @@ module Fluent
         # Check if the decision is to alert on the message
         # @return [Boolean] True if message should generate an alert
         sig { returns(T::Boolean) }
-
         def alert?
           @decision == ALERT
         end
@@ -59,7 +56,6 @@ module Fluent
         # Check if the decision is to pass the message through
         # @return [Boolean] True if message should pass through unchanged
         sig { returns(T::Boolean) }
-
         def pass?
           @decision == PASS
         end
@@ -67,7 +63,6 @@ module Fluent
         # Check if a rule matched
         # @return [Boolean] True if a rule matched
         sig { returns(T::Boolean) }
-
         def matched?
           !@rule.nil?
         end
@@ -75,7 +70,6 @@ module Fluent
         # Get a human-readable description of the decision
         # @return [String] Description of the decision
         sig { returns(String) }
-
         def description
           case @decision
           when IGNORE
@@ -83,7 +77,7 @@ module Fluent
           when ALERT
             "Alert triggered by #{@rule_type} rule: #{T.must(@rule).raw_pattern}"
           when PASS
-            "Message passed through (no matching rules)"
+            'Message passed through (no matching rules)'
           else
             "Unknown decision: #{@decision}"
           end
@@ -92,7 +86,6 @@ module Fluent
         # Convert to hash for logging/debugging
         # @return [Hash] Hash representation of the decision
         sig { returns(T::Hash[Symbol, T.untyped]) }
-
         def to_h
           {
             decision: @decision,
@@ -100,7 +93,7 @@ module Fluent
             pattern: @rule&.raw_pattern,
             source: @rule&.source_file,
             line: @rule&.line_number,
-            message_preview: @message[0..100],
+            message_preview: @message[0..100]
           }
         end
 

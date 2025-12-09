@@ -1,17 +1,17 @@
 # typed: false
 # frozen_string_literal: true
 
-require_relative "../helper"
-require "fluent/plugin/filter_logcheck"
-require "tempfile"
-require "fileutils"
+require_relative '../helper'
+require 'fluent/plugin/filter_logcheck'
+require 'tempfile'
+require 'fileutils'
 
 class ErrorHandlingTest < Test::Unit::TestCase
   include Fluent::Test::Helpers
 
   def setup
     Fluent::Test.setup
-    @temp_dir = Dir.mktmpdir("logcheck_error_test")
+    @temp_dir = Dir.mktmpdir('logcheck_error_test')
     create_test_files
   end
 
@@ -19,9 +19,9 @@ class ErrorHandlingTest < Test::Unit::TestCase
     FileUtils.rm_rf(@temp_dir) if @temp_dir && Dir.exist?(@temp_dir)
   end
 
-  sub_test_case "rule loading error handling" do
-    test "handles missing rule files gracefully" do
-      non_existent_file = File.join(@temp_dir, "missing.rules")
+  sub_test_case 'rule loading error handling' do
+    test 'handles missing rule files gracefully' do
+      non_existent_file = File.join(@temp_dir, 'missing.rules')
       config = %(
         rules_file #{non_existent_file}
         log_rule_errors true
@@ -31,8 +31,8 @@ class ErrorHandlingTest < Test::Unit::TestCase
 
       # Should not raise, but should log warning
       assert_nothing_raised do
-        d.run(default_tag: "test") do
-          d.feed(event_time, { "message" => "test message" })
+        d.run(default_tag: 'test') do
+          d.feed(event_time, { 'message' => 'test message' })
         end
       end
 
@@ -40,8 +40,8 @@ class ErrorHandlingTest < Test::Unit::TestCase
       assert_equal 1, d.filtered_records.size
     end
 
-    test "handles missing rule directories gracefully" do
-      non_existent_dir = File.join(@temp_dir, "missing_dir")
+    test 'handles missing rule directories gracefully' do
+      non_existent_dir = File.join(@temp_dir, 'missing_dir')
       config = %(
         rules_dir #{non_existent_dir}
         log_rule_errors true
@@ -51,8 +51,8 @@ class ErrorHandlingTest < Test::Unit::TestCase
 
       # Should not raise, but should log warning
       assert_nothing_raised do
-        d.run(default_tag: "test") do
-          d.feed(event_time, { "message" => "test message" })
+        d.run(default_tag: 'test') do
+          d.feed(event_time, { 'message' => 'test message' })
         end
       end
 
@@ -60,8 +60,8 @@ class ErrorHandlingTest < Test::Unit::TestCase
       assert_equal 1, d.filtered_records.size
     end
 
-    test "handles malformed rule files gracefully" do
-      malformed_file = File.join(@temp_dir, "malformed.rules")
+    test 'handles malformed rule files gracefully' do
+      malformed_file = File.join(@temp_dir, 'malformed.rules')
       File.write(malformed_file, "[invalid_regex\n(unclosed_group\n")
 
       config = %(
@@ -74,8 +74,8 @@ class ErrorHandlingTest < Test::Unit::TestCase
 
       # Should not raise during initialization or processing
       assert_nothing_raised do
-        d.run(default_tag: "test") do
-          d.feed(event_time, { "message" => "test message" })
+        d.run(default_tag: 'test') do
+          d.feed(event_time, { 'message' => 'test message' })
         end
       end
 
@@ -83,9 +83,9 @@ class ErrorHandlingTest < Test::Unit::TestCase
       assert_equal 1, d.filtered_records.size
     end
 
-    test "handles file permission errors gracefully" do
-      restricted_file = File.join(@temp_dir, "restricted.rules")
-      File.write(restricted_file, "test.*pattern")
+    test 'handles file permission errors gracefully' do
+      restricted_file = File.join(@temp_dir, 'restricted.rules')
+      File.write(restricted_file, 'test.*pattern')
 
       begin
         File.chmod(0o000, restricted_file)
@@ -100,8 +100,8 @@ class ErrorHandlingTest < Test::Unit::TestCase
 
         # Should not raise
         assert_nothing_raised do
-          d.run(default_tag: "test") do
-            d.feed(event_time, { "message" => "test message" })
+          d.run(default_tag: 'test') do
+            d.feed(event_time, { 'message' => 'test message' })
           end
         end
 
@@ -117,8 +117,8 @@ class ErrorHandlingTest < Test::Unit::TestCase
     end
   end
 
-  sub_test_case "record processing error handling" do
-    test "handles missing message field gracefully" do
+  sub_test_case 'record processing error handling' do
+    test 'handles missing message field gracefully' do
       config = %(
         rules_file #{@valid_rules_file}
         match_field message
@@ -128,17 +128,17 @@ class ErrorHandlingTest < Test::Unit::TestCase
 
       # Record without message field
       assert_nothing_raised do
-        d.run(default_tag: "test") do
-          d.feed(event_time, { "other_field" => "some value" })
+        d.run(default_tag: 'test') do
+          d.feed(event_time, { 'other_field' => 'some value' })
         end
       end
 
       # Record should pass through unchanged
       assert_equal 1, d.filtered_records.size
-      assert_equal "some value", d.filtered_records.first["other_field"]
+      assert_equal 'some value', d.filtered_records.first['other_field']
     end
 
-    test "handles nil message field gracefully" do
+    test 'handles nil message field gracefully' do
       config = %(
         rules_file #{@valid_rules_file}
         match_field message
@@ -148,17 +148,17 @@ class ErrorHandlingTest < Test::Unit::TestCase
 
       # Record with nil message field
       assert_nothing_raised do
-        d.run(default_tag: "test") do
-          d.feed(event_time, { "message" => nil, "other_field" => "value" })
+        d.run(default_tag: 'test') do
+          d.feed(event_time, { 'message' => nil, 'other_field' => 'value' })
         end
       end
 
       # Record should pass through unchanged
       assert_equal 1, d.filtered_records.size
-      assert_nil d.filtered_records.first["message"]
+      assert_nil d.filtered_records.first['message']
     end
 
-    test "handles empty message field gracefully" do
+    test 'handles empty message field gracefully' do
       config = %(
         rules_file #{@valid_rules_file}
         match_field message
@@ -168,17 +168,17 @@ class ErrorHandlingTest < Test::Unit::TestCase
 
       # Record with empty message field
       assert_nothing_raised do
-        d.run(default_tag: "test") do
-          d.feed(event_time, { "message" => "", "other_field" => "value" })
+        d.run(default_tag: 'test') do
+          d.feed(event_time, { 'message' => '', 'other_field' => 'value' })
         end
       end
 
       # Record should pass through unchanged
       assert_equal 1, d.filtered_records.size
-      assert_equal "", d.filtered_records.first["message"]
+      assert_equal '', d.filtered_records.first['message']
     end
 
-    test "handles non-string message field gracefully" do
+    test 'handles non-string message field gracefully' do
       config = %(
         rules_file #{@valid_rules_file}
         match_field message
@@ -188,8 +188,8 @@ class ErrorHandlingTest < Test::Unit::TestCase
 
       # Record with numeric message field
       assert_nothing_raised do
-        d.run(default_tag: "test") do
-          d.feed(event_time, { "message" => 12_345, "other_field" => "value" })
+        d.run(default_tag: 'test') do
+          d.feed(event_time, { 'message' => 12_345, 'other_field' => 'value' })
         end
       end
 
@@ -197,7 +197,7 @@ class ErrorHandlingTest < Test::Unit::TestCase
       assert_equal 1, d.filtered_records.size
     end
 
-    test "handles nested field access errors gracefully" do
+    test 'handles nested field access errors gracefully' do
       config = %(
         rules_file #{@valid_rules_file}
         match_field nested.field.that.does.not.exist
@@ -207,8 +207,8 @@ class ErrorHandlingTest < Test::Unit::TestCase
 
       # Record without nested field
       assert_nothing_raised do
-        d.run(default_tag: "test") do
-          d.feed(event_time, { "message" => "test", "nested" => { "other" => "value" } })
+        d.run(default_tag: 'test') do
+          d.feed(event_time, { 'message' => 'test', 'nested' => { 'other' => 'value' } })
         end
       end
 
@@ -217,8 +217,8 @@ class ErrorHandlingTest < Test::Unit::TestCase
     end
   end
 
-  sub_test_case "rule engine error handling" do
-    test "handles rule engine exceptions gracefully" do
+  sub_test_case 'rule engine error handling' do
+    test 'handles rule engine exceptions gracefully' do
       config = %(
         rules_file #{@valid_rules_file}
         log_rule_errors true
@@ -228,22 +228,22 @@ class ErrorHandlingTest < Test::Unit::TestCase
 
       # Mock rule engine to throw exception
       d.instance.instance_variable_get(:@rule_engine).define_singleton_method(:filter) do |_text|
-        raise StandardError, "Simulated rule engine error"
+        raise StandardError, 'Simulated rule engine error'
       end
 
       # Should not raise, should return original record
       assert_nothing_raised do
-        d.run(default_tag: "test") do
-          d.feed(event_time, { "message" => "test message" })
+        d.run(default_tag: 'test') do
+          d.feed(event_time, { 'message' => 'test message' })
         end
       end
 
       # Record should pass through unchanged due to error handling
       assert_equal 1, d.filtered_records.size
-      assert_equal "test message", d.filtered_records.first["message"]
+      assert_equal 'test message', d.filtered_records.first['message']
     end
 
-    test "handles filter decision application errors gracefully" do
+    test 'handles filter decision application errors gracefully' do
       config = %(
         rules_file #{@valid_rules_file}
         mark_matches true
@@ -253,7 +253,7 @@ class ErrorHandlingTest < Test::Unit::TestCase
       d = create_driver(config)
 
       # Create a decision that might cause issues
-      decision = Fluent::Plugin::Logcheck::FilterDecision.new(:unknown_decision, nil, "test")
+      decision = Fluent::Plugin::Logcheck::FilterDecision.new(:unknown_decision, nil, 'test')
 
       # Mock make_filter_decision to return problematic decision
       d.instance.define_singleton_method(:make_filter_decision) do |_text|
@@ -262,8 +262,8 @@ class ErrorHandlingTest < Test::Unit::TestCase
 
       # Should not raise, should apply default action
       assert_nothing_raised do
-        d.run(default_tag: "test") do
-          d.feed(event_time, { "message" => "test message" })
+        d.run(default_tag: 'test') do
+          d.feed(event_time, { 'message' => 'test message' })
         end
       end
 
@@ -272,14 +272,14 @@ class ErrorHandlingTest < Test::Unit::TestCase
     end
   end
 
-  sub_test_case "configuration error recovery" do
-    test "continues processing with partial rule loading failures" do
+  sub_test_case 'configuration error recovery' do
+    test 'continues processing with partial rule loading failures' do
       # Create mixed scenario: some valid, some invalid rule sources
-      valid_file = File.join(@temp_dir, "valid.rules")
-      File.write(valid_file, "^valid.*pattern$")
+      valid_file = File.join(@temp_dir, 'valid.rules')
+      File.write(valid_file, '^valid.*pattern$')
 
-      invalid_file = File.join(@temp_dir, "invalid.rules")
-      File.write(invalid_file, "[invalid_regex")
+      invalid_file = File.join(@temp_dir, 'invalid.rules')
+      File.write(invalid_file, '[invalid_regex')
 
       config = %(
         <rules>
@@ -298,21 +298,21 @@ class ErrorHandlingTest < Test::Unit::TestCase
 
       # Should load valid rules and continue processing
       assert_nothing_raised do
-        d.run(default_tag: "test") do
-          d.feed(event_time, { "message" => "valid test pattern" })
-          d.feed(event_time, { "message" => "unmatched message" })
+        d.run(default_tag: 'test') do
+          d.feed(event_time, { 'message' => 'valid test pattern' })
+          d.feed(event_time, { 'message' => 'unmatched message' })
         end
       end
 
       # First message should be ignored (matches valid rule)
       # Second message should pass through
       assert_equal 1, d.filtered_records.size
-      assert_equal "unmatched message", d.filtered_records.first["message"]
+      assert_equal 'unmatched message', d.filtered_records.first['message']
     end
   end
 
-  sub_test_case "logging and debugging" do
-    test "provides detailed error information when log_rule_errors is true" do
+  sub_test_case 'logging and debugging' do
+    test 'provides detailed error information when log_rule_errors is true' do
       config = %(
         rules_file #{@valid_rules_file}
         log_rule_errors true
@@ -321,9 +321,9 @@ class ErrorHandlingTest < Test::Unit::TestCase
       d = create_driver(config)
 
       # Process some records to generate log entries
-      d.run(default_tag: "test") do
-        d.feed(event_time, { "message" => "test ignore pattern" })
-        d.feed(event_time, { "message" => "unmatched message" })
+      d.run(default_tag: 'test') do
+        d.feed(event_time, { 'message' => 'test ignore pattern' })
+        d.feed(event_time, { 'message' => 'unmatched message' })
       end
 
       # Should have logged debug information
@@ -331,7 +331,7 @@ class ErrorHandlingTest < Test::Unit::TestCase
       assert_operator logs.size, :>, 0
     end
 
-    test "suppresses detailed logging when log_rule_errors is false" do
+    test 'suppresses detailed logging when log_rule_errors is false' do
       config = %(
         rules_file #{@valid_rules_file}
         log_rule_errors false
@@ -340,13 +340,13 @@ class ErrorHandlingTest < Test::Unit::TestCase
       d = create_driver(config)
 
       # Process some records
-      d.run(default_tag: "test") do
-        d.feed(event_time, { "message" => "test ignore pattern" })
+      d.run(default_tag: 'test') do
+        d.feed(event_time, { 'message' => 'test ignore pattern' })
       end
 
       # Should have minimal logging
       logs = d.logs
-      debug_logs = logs.select { |log| log.include?("Ignoring message") }
+      debug_logs = logs.select { |log| log.include?('Ignoring message') }
       assert_equal 0, debug_logs.size
     end
   end
@@ -358,15 +358,15 @@ class ErrorHandlingTest < Test::Unit::TestCase
   end
 
   def create_test_files
-    @valid_rules_file = File.join(@temp_dir, "valid.rules")
+    @valid_rules_file = File.join(@temp_dir, 'valid.rules')
     File.write(@valid_rules_file, [
-      "^test ignore pattern$",
-      "^another ignore pattern$",
+      '^test ignore pattern$',
+      '^another ignore pattern$'
     ].join("\n"))
 
     # Create a test directory structure
-    ignore_dir = File.join(@temp_dir, "ignore.d.server")
+    ignore_dir = File.join(@temp_dir, 'ignore.d.server')
     FileUtils.mkdir_p(ignore_dir)
-    File.write(File.join(ignore_dir, "test"), "^.*ignore.*$")
+    File.write(File.join(ignore_dir, 'test'), '^.*ignore.*$')
   end
 end
