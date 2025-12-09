@@ -1,17 +1,17 @@
 # typed: false
 # frozen_string_literal: true
 
-require_relative '../helper'
-require 'fluent/plugin/filter_logcheck'
-require 'tempfile'
-require 'fileutils'
+require_relative "../helper"
+require "fluent/plugin/filter_logcheck"
+require "tempfile"
+require "fileutils"
 
 class ConfigurationValidationTest < Test::Unit::TestCase
   include Fluent::Test::Helpers
 
   def setup
     Fluent::Test.setup
-    @temp_dir = Dir.mktmpdir('logcheck_config_test')
+    @temp_dir = Dir.mktmpdir("logcheck_config_test")
     create_test_files
   end
 
@@ -19,8 +19,8 @@ class ConfigurationValidationTest < Test::Unit::TestCase
     FileUtils.rm_rf(@temp_dir) if @temp_dir && Dir.exist?(@temp_dir)
   end
 
-  sub_test_case 'rule source validation' do
-    test 'raises error when no rule sources specified' do
+  sub_test_case "rule source validation" do
+    test "raises error when no rule sources specified" do
       config = %()
 
       assert_raise(Fluent::ConfigError) do
@@ -28,7 +28,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       end
     end
 
-    test 'accepts rules_file configuration' do
+    test "accepts rules_file configuration" do
       config = %(
         rules_file #{@test_file}
       )
@@ -38,7 +38,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       end
     end
 
-    test 'accepts rules_dir configuration' do
+    test "accepts rules_dir configuration" do
       config = %(
         rules_dir #{@temp_dir}
       )
@@ -48,7 +48,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       end
     end
 
-    test 'accepts rules section configuration' do
+    test "accepts rules section configuration" do
       config = %(
         <rules>
           path #{@test_file}
@@ -61,8 +61,8 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       end
     end
 
-    test 'validates rules_file exists during initialization' do
-      non_existent_file = File.join(@temp_dir, 'non_existent.rules')
+    test "validates rules_file exists during initialization" do
+      non_existent_file = File.join(@temp_dir, "non_existent.rules")
       config = %(
         rules_file #{non_existent_file}
       )
@@ -72,8 +72,8 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       assert_not_nil d.instance
     end
 
-    test 'validates rules_dir exists during initialization' do
-      non_existent_dir = File.join(@temp_dir, 'non_existent_dir')
+    test "validates rules_dir exists during initialization" do
+      non_existent_dir = File.join(@temp_dir, "non_existent_dir")
       config = %(
         rules_dir #{non_existent_dir}
       )
@@ -84,8 +84,8 @@ class ConfigurationValidationTest < Test::Unit::TestCase
     end
   end
 
-  sub_test_case 'parameter validation' do
-    test 'validates cache_size is positive' do
+  sub_test_case "parameter validation" do
+    test "validates cache_size is positive" do
       config = %(
         rules_file #{@test_file}
         cache_size 0
@@ -96,7 +96,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       end
     end
 
-    test 'validates cache_size negative value' do
+    test "validates cache_size negative value" do
       config = %(
         rules_file #{@test_file}
         cache_size -100
@@ -107,7 +107,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       end
     end
 
-    test 'validates max_rules_per_file is positive' do
+    test "validates max_rules_per_file is positive" do
       config = %(
         rules_file #{@test_file}
         max_rules_per_file 0
@@ -118,7 +118,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       end
     end
 
-    test 'validates max_rules_per_file negative value' do
+    test "validates max_rules_per_file negative value" do
       config = %(
         rules_file #{@test_file}
         max_rules_per_file -50
@@ -129,7 +129,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       end
     end
 
-    test 'validates match_field is not empty' do
+    test "validates match_field is not empty" do
       config = %(
         rules_file #{@test_file}
         match_field ""
@@ -140,7 +140,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       end
     end
 
-    test 'validates mark_field_prefix is not empty when mark_matches is true' do
+    test "validates mark_field_prefix is not empty when mark_matches is true" do
       config = %(
         rules_file #{@test_file}
         mark_matches true
@@ -153,8 +153,8 @@ class ConfigurationValidationTest < Test::Unit::TestCase
     end
   end
 
-  sub_test_case 'rule_priority validation' do
-    test 'validates rule_priority contains valid types' do
+  sub_test_case "rule_priority validation" do
+    test "validates rule_priority contains valid types" do
       config = %(
         rules_file #{@test_file}
         rule_priority ["invalid_type", "cracking"]
@@ -165,7 +165,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       end
     end
 
-    test 'accepts valid rule_priority' do
+    test "accepts valid rule_priority" do
       config = %(
         rules_file #{@test_file}
         rule_priority ["cracking", "violations", "ignore"]
@@ -176,7 +176,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       end
     end
 
-    test 'validates rule_priority is not empty' do
+    test "validates rule_priority is not empty" do
       config = %(
         rules_file #{@test_file}
         rule_priority []
@@ -187,7 +187,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       end
     end
 
-    test 'validates rule_priority contains unique values' do
+    test "validates rule_priority contains unique values" do
       config = %(
         rules_file #{@test_file}
         rule_priority ["cracking", "cracking", "ignore"]
@@ -199,8 +199,8 @@ class ConfigurationValidationTest < Test::Unit::TestCase
     end
   end
 
-  sub_test_case 'rules section validation' do
-    test 'validates rules section path is specified' do
+  sub_test_case "rules section validation" do
+    test "validates rules section path is specified" do
       config = %(
         <rules>
           type ignore
@@ -212,7 +212,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       end
     end
 
-    test 'validates rules section path is not empty' do
+    test "validates rules section path is not empty" do
       config = %(
         <rules>
           path ""
@@ -225,7 +225,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       end
     end
 
-    test 'validates rules section type is valid' do
+    test "validates rules section type is valid" do
       config = %(
         <rules>
           path #{@test_file}
@@ -238,7 +238,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       end
     end
 
-    test 'accepts rules section with valid configuration' do
+    test "accepts rules section with valid configuration" do
       config = %(
         <rules>
           path #{@test_file}
@@ -253,8 +253,8 @@ class ConfigurationValidationTest < Test::Unit::TestCase
     end
   end
 
-  sub_test_case 'enum validation' do
-    test 'validates default_action enum' do
+  sub_test_case "enum validation" do
+    test "validates default_action enum" do
       config = %(
         rules_file #{@test_file}
         default_action invalid_action
@@ -265,7 +265,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       end
     end
 
-    test 'accepts valid default_action values' do
+    test "accepts valid default_action values" do
       %w(keep drop).each do |action|
         config = %(
           rules_file #{@test_file}
@@ -279,8 +279,8 @@ class ConfigurationValidationTest < Test::Unit::TestCase
     end
   end
 
-  sub_test_case 'path validation' do
-    test 'validates absolute paths' do
+  sub_test_case "path validation" do
+    test "validates absolute paths" do
       config = %(
         rules_file /absolute/path/to/rules
       )
@@ -291,7 +291,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       end
     end
 
-    test 'validates relative paths' do
+    test "validates relative paths" do
       config = %(
         rules_file ./relative/path/to/rules
       )
@@ -302,9 +302,9 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       end
     end
 
-    test 'handles special characters in paths' do
-      special_file = File.join(@temp_dir, 'rules with spaces & symbols.txt')
-      File.write(special_file, 'test.*pattern')
+    test "handles special characters in paths" do
+      special_file = File.join(@temp_dir, "rules with spaces & symbols.txt")
+      File.write(special_file, "test.*pattern")
 
       config = %(
         rules_file "#{special_file}"
@@ -316,8 +316,8 @@ class ConfigurationValidationTest < Test::Unit::TestCase
     end
   end
 
-  sub_test_case 'configuration combinations' do
-    test 'allows multiple rule sources' do
+  sub_test_case "configuration combinations" do
+    test "allows multiple rule sources" do
       config = %(
         rules_file #{@test_file}
         rules_dir #{@temp_dir}
@@ -332,7 +332,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       end
     end
 
-    test 'validates consistent configuration' do
+    test "validates consistent configuration" do
       config = %(
         rules_file #{@test_file}
         mark_matches true
@@ -343,17 +343,17 @@ class ConfigurationValidationTest < Test::Unit::TestCase
 
       d = create_driver(config)
       assert_equal true, d.instance.mark_matches
-      assert_equal 'custom_', d.instance.mark_field_prefix
+      assert_equal "custom_", d.instance.mark_field_prefix
       assert_equal 500, d.instance.cache_size
       assert_equal 100, d.instance.max_rules_per_file
     end
   end
 
-  sub_test_case 'error handling during initialization' do
-    test 'handles file permission errors gracefully' do
+  sub_test_case "error handling during initialization" do
+    test "handles file permission errors gracefully" do
       # Create a file and make it unreadable (if possible)
-      restricted_file = File.join(@temp_dir, 'restricted.rules')
-      File.write(restricted_file, 'test.*pattern')
+      restricted_file = File.join(@temp_dir, "restricted.rules")
+      File.write(restricted_file, "test.*pattern")
 
       begin
         File.chmod(0o000, restricted_file)
@@ -374,9 +374,9 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       end
     end
 
-    test 'handles malformed rule files gracefully' do
-      malformed_file = File.join(@temp_dir, 'malformed.rules')
-      File.write(malformed_file, '[invalid_regex')
+    test "handles malformed rule files gracefully" do
+      malformed_file = File.join(@temp_dir, "malformed.rules")
+      File.write(malformed_file, "[invalid_regex")
 
       config = %(
         rules_file #{malformed_file}
@@ -395,12 +395,12 @@ class ConfigurationValidationTest < Test::Unit::TestCase
   end
 
   def create_test_files
-    @test_file = File.join(@temp_dir, 'test.rules')
+    @test_file = File.join(@temp_dir, "test.rules")
     File.write(@test_file, "^test.*pattern$\n^another.*pattern$")
 
     # Create a test directory with some rule files
-    test_subdir = File.join(@temp_dir, 'ignore.d.server')
+    test_subdir = File.join(@temp_dir, "ignore.d.server")
     FileUtils.mkdir_p(test_subdir)
-    File.write(File.join(test_subdir, 'systemd'), '^.*systemd.*$')
+    File.write(File.join(test_subdir, "systemd"), "^.*systemd.*$")
   end
 end

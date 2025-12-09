@@ -1,8 +1,8 @@
 # typed: strict
 # frozen_string_literal: true
 
-require 'sorbet-runtime'
-require_relative 'filter_decision'
+require "sorbet-runtime"
+require_relative "filter_decision"
 
 module Fluent
   module Plugin
@@ -15,10 +15,11 @@ module Fluent
         RULE_PRECEDENCE = T.let({
           cracking: 3,     # Highest precedence - security alerts
           violations: 2,   # Medium precedence - system violations
-          ignore: 1        # Lowest precedence - ignore rules
+          ignore: 1,        # Lowest precedence - ignore rules
         }.freeze, T::Hash[Symbol, Integer])
 
         sig { params(logger: T.nilable(T.untyped)).void }
+
         def initialize(logger: nil)
           @logger = T.let(logger, T.nilable(T.untyped))
           @rule_sets = T.let([], T::Array[T.untyped])
@@ -27,13 +28,14 @@ module Fluent
                            ignored_messages: 0,
                            alert_messages: 0,
                            passed_messages: 0,
-                           rule_matches: Hash.new(0)
+                           rule_matches: Hash.new(0),
                          }, T::Hash[Symbol, T.untyped])
         end
 
         # Add a rule set to the engine
         # @param rule_set [RuleSet] Rule set to add
         sig { params(rule_set: T.untyped).void }
+
         def add_rule_set(rule_set)
           @rule_sets << rule_set
           log_info "Added rule set: #{rule_set.type} with #{rule_set.size} rules from #{rule_set.source_path}"
@@ -42,20 +44,23 @@ module Fluent
         # Add multiple rule sets to the engine
         # @param rule_sets [Array<RuleSet>] Rule sets to add
         sig { params(rule_sets: T::Array[T.untyped]).void }
+
         def add_rule_sets(rule_sets)
           rule_sets.each { |rule_set| add_rule_set(rule_set) }
         end
 
         # Clear all rule sets
         sig { void }
+
         def clear_rule_sets
           @rule_sets.clear
-          log_info 'Cleared all rule sets'
+          log_info "Cleared all rule sets"
         end
 
         # Get the number of loaded rule sets
         # @return [Integer] Number of rule sets
         sig { returns(Integer) }
+
         def rule_set_count
           @rule_sets.size
         end
@@ -63,6 +68,7 @@ module Fluent
         # Get the total number of rules across all rule sets
         # @return [Integer] Total number of rules
         sig { returns(Integer) }
+
         def total_rule_count
           @rule_sets.sum(&:size)
         end
@@ -71,6 +77,7 @@ module Fluent
         # @param message [String] The log message to filter
         # @return [FilterDecision] The filtering decision
         sig { params(message: String).returns(FilterDecision) }
+
         def filter(message)
           @stats[:total_messages] = T.cast(@stats[:total_messages], Integer) + 1
 
@@ -95,19 +102,21 @@ module Fluent
         # Get filtering statistics
         # @return [Hash] Statistics about filtering operations
         sig { returns(T::Hash[Symbol, T.untyped]) }
+
         def statistics
           @stats.dup
         end
 
         # Reset statistics
         sig { void }
+
         def reset_statistics
           @stats = {
             total_messages: 0,
             ignored_messages: 0,
             alert_messages: 0,
             passed_messages: 0,
-            rule_matches: Hash.new(0)
+            rule_matches: Hash.new(0),
           }
         end
 
@@ -117,6 +126,7 @@ module Fluent
         # @param message [String] The log message
         # @return [Array<Rule>] Array of matching rules
         sig { params(message: String).returns(T::Array[T.untyped]) }
+
         def find_matching_rules(message)
           matching_rules = T.let([], T::Array[T.untyped])
 
@@ -137,6 +147,7 @@ module Fluent
         # @param message [String] The log message
         # @return [FilterDecision] The final decision
         sig { params(matching_rules: T::Array[T.untyped], message: String).returns(FilterDecision) }
+
         def apply_rule_precedence(matching_rules, message)
           # Sort rules by precedence (highest first)
           sorted_rules = matching_rules.sort_by { |rule| -(RULE_PRECEDENCE[rule.type] || 0) }
@@ -159,6 +170,7 @@ module Fluent
         # Update statistics based on the decision
         # @param decision [FilterDecision] The filtering decision
         sig { params(decision: FilterDecision).void }
+
         def update_stats(decision)
           case decision.decision
           when FilterDecision::IGNORE
@@ -172,16 +184,19 @@ module Fluent
 
         # Logging helpers
         sig { params(message: String).void }
+
         def log_info(message)
           @logger&.info(message)
         end
 
         sig { params(message: String).void }
+
         def log_debug(message)
           @logger&.debug(message)
         end
 
         sig { params(message: String).void }
+
         def log_warning(message)
           @logger&.warn(message)
         end

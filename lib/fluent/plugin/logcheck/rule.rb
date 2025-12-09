@@ -1,8 +1,8 @@
 # typed: strict
 # frozen_string_literal: true
 
-require 'sorbet-runtime'
-require_relative 'rule_types'
+require "sorbet-runtime"
+require_relative "rule_types"
 
 module Fluent
   module Plugin
@@ -35,6 +35,7 @@ module Fluent
         # @param source_file [String] Path to source file
         # @param line_number [Integer] Line number in source file
         sig { params(raw_pattern: String, type: Symbol, source_file: String, line_number: Integer).void }
+
         def initialize(raw_pattern, type, source_file, line_number)
           @raw_pattern = raw_pattern
           @type = type
@@ -47,6 +48,7 @@ module Fluent
         # @param text [String] Text to match against
         # @return [Boolean] True if pattern matches
         sig { params(text: T.nilable(String)).returns(T::Boolean) }
+
         def match?(text)
           return false if text.nil?
 
@@ -58,6 +60,7 @@ module Fluent
         # Get compiled regex pattern (lazy compilation)
         # @return [Regexp] Compiled regex pattern
         sig { returns(Regexp) }
+
         def pattern
           @pattern ||= compile_pattern
         end
@@ -65,12 +68,13 @@ module Fluent
         # Get rule metadata
         # @return [Hash] Rule metadata
         sig { returns(T::Hash[Symbol, T.untyped]) }
+
         def metadata
           {
             type: @type,
             source_file: @source_file,
             line_number: @line_number,
-            pattern: @raw_pattern
+            pattern: @raw_pattern,
           }
         end
 
@@ -79,6 +83,7 @@ module Fluent
         # Compile the regex pattern with error handling
         # @return [Regexp] Compiled regex pattern
         sig { returns(Regexp) }
+
         def compile_pattern
           Regexp.new(@raw_pattern)
         rescue RegexpError => e
@@ -104,6 +109,7 @@ module Fluent
         # @param type [Symbol] Rule type
         # @param source_path [String] Source file/directory path
         sig { params(type: Symbol, source_path: String).void }
+
         def initialize(type, source_path)
           @type = type
           @source_path = source_path
@@ -113,6 +119,7 @@ module Fluent
         # Add rule to set
         # @param rule [Rule] Rule to add
         sig { params(rule: Rule).void }
+
         def add_rule(rule)
           @rules << rule
         end
@@ -121,6 +128,7 @@ module Fluent
         # @param text [String] Text to match
         # @return [Rule, nil] First matching rule or nil
         sig { params(text: String).returns(T.nilable(Rule)) }
+
         def match(text)
           @rules.find { |rule| rule.match?(text) }
         end
@@ -129,6 +137,7 @@ module Fluent
         # @param text [String] Text to match
         # @return [Array<Rule>] All matching rules
         sig { params(text: String).returns(T::Array[Rule]) }
+
         def match_all(text)
           @rules.grep { |rule| rule.match?(text) }
         end
@@ -136,6 +145,7 @@ module Fluent
         # Get rule count
         # @return [Integer] Number of rules in set
         sig { returns(Integer) }
+
         def size
           @rules.size
         end
@@ -143,6 +153,7 @@ module Fluent
         # Check if rule set is empty
         # @return [Boolean] True if no rules
         sig { returns(T::Boolean) }
+
         def empty?
           @rules.empty?
         end
