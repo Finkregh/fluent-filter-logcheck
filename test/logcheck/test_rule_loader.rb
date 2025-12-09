@@ -1,3 +1,4 @@
+# typed: false
 # frozen_string_literal: true
 
 require_relative '../helper'
@@ -27,7 +28,7 @@ class RuleLoaderTest < Test::Unit::TestCase
                                  ])
 
     rule_set = @rule_loader.load_file(rule_file, :ignore)
-    
+
     assert_not_nil rule_set
     assert_equal :ignore, rule_set.type
     assert_equal 2, rule_set.size
@@ -43,7 +44,7 @@ class RuleLoaderTest < Test::Unit::TestCase
                                  ])
 
     rule_set = @rule_loader.load_file(rule_file, :cracking)
-    
+
     assert_not_nil rule_set
     assert_equal :cracking, rule_set.type
     assert_equal 2, rule_set.size
@@ -64,7 +65,7 @@ class RuleLoaderTest < Test::Unit::TestCase
                                  ])
 
     rule_set = @rule_loader.load_file(rule_file, :ignore)
-    
+
     assert_equal 2, rule_set.size
     patterns = rule_set.rules.map(&:raw_pattern)
     assert_includes patterns, 'valid_rule_pattern'
@@ -88,7 +89,7 @@ class RuleLoaderTest < Test::Unit::TestCase
 
     # Should not raise an error but should log warnings
     rule_set = @rule_loader.load_file(rule_file, :ignore)
-    
+
     # Should only load valid patterns
     assert_equal 2, rule_set.size
   end
@@ -98,7 +99,7 @@ class RuleLoaderTest < Test::Unit::TestCase
     create_directory_structure
 
     rule_sets = @rule_loader.load_directory(@temp_dir, :ignore, recursive: true)
-    
+
     assert_equal 3, rule_sets.size # 3 files created
     total_rules = rule_sets.sum(&:size)
     assert_equal 6, total_rules # 2 rules per file
@@ -109,7 +110,7 @@ class RuleLoaderTest < Test::Unit::TestCase
     create_directory_structure
 
     rule_sets = @rule_loader.load_directory(@temp_dir, :ignore, recursive: false)
-    
+
     assert_equal 1, rule_sets.size # Only top-level file
     assert_equal 2, rule_sets.first.size
   end
@@ -119,10 +120,10 @@ class RuleLoaderTest < Test::Unit::TestCase
     create_typed_directory_structure
 
     rule_sets = @rule_loader.load_directory(@temp_dir, nil, recursive: true)
-    
+
     ignore_sets = rule_sets.select { |rs| rs.type == :ignore }
     cracking_sets = rule_sets.select { |rs| rs.type == :cracking }
-    
+
     assert_equal 1, ignore_sets.size
     assert_equal 1, cracking_sets.size
   end
@@ -132,7 +133,7 @@ class RuleLoaderTest < Test::Unit::TestCase
     large_rule_file = create_temp_file('large_rules', (1..1500).map { |i| "rule_pattern_#{i}" })
 
     rule_set = @rule_loader.load_file(large_rule_file, :ignore, max_rules: 1000)
-    
+
     assert_equal 1000, rule_set.size
   end
 
@@ -141,7 +142,7 @@ class RuleLoaderTest < Test::Unit::TestCase
     empty_file = create_temp_file('empty', [])
 
     rule_set = @rule_loader.load_file(empty_file, :ignore)
-    
+
     assert_not_nil rule_set
     assert_equal 0, rule_set.size
   end
@@ -154,7 +155,7 @@ class RuleLoaderTest < Test::Unit::TestCase
                                  ))
 
     rule_set = @rule_loader.load_file(rule_file, :ignore)
-    
+
     assert_equal 2, rule_set.size
   end
 
@@ -170,10 +171,10 @@ class RuleLoaderTest < Test::Unit::TestCase
     # Create a nested directory structure with rule files
     sub_dir = File.join(@temp_dir, 'subdir')
     FileUtils.mkdir_p(sub_dir)
-    
+
     # Top-level file
     create_temp_file('top_level', %w(top_rule_1 top_rule_2))
-    
+
     # Sub-directory files
     File.write(File.join(sub_dir, 'sub_file1'), "sub_rule_1\nsub_rule_2")
     File.write(File.join(sub_dir, 'sub_file2'), "sub_rule_3\nsub_rule_4")
@@ -183,10 +184,10 @@ class RuleLoaderTest < Test::Unit::TestCase
     # Create directory structure with type-specific subdirectories
     ignore_dir = File.join(@temp_dir, 'ignore.d')
     cracking_dir = File.join(@temp_dir, 'cracking.d')
-    
+
     FileUtils.mkdir_p(ignore_dir)
     FileUtils.mkdir_p(cracking_dir)
-    
+
     File.write(File.join(ignore_dir, 'server'), "ignore_rule_1\nignore_rule_2")
     File.write(File.join(cracking_dir, 'ssh'), "cracking_rule_1\ncracking_rule_2")
   end

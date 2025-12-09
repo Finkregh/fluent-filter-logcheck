@@ -1,5 +1,7 @@
+# typed: strict
 # frozen_string_literal: true
 
+require 'sorbet-runtime'
 require_relative 'rule_types'
 require_relative 'rule'
 
@@ -8,12 +10,15 @@ module Fluent
     module Logcheck
       # RuleLoader handles loading and parsing logcheck rule files
       class RuleLoader
+        extend T::Sig
+
         # Custom exceptions
         class FileNotFoundError < StandardError; end
         class ParseError < StandardError; end
 
+        sig { params(logger: T.nilable(T.untyped)).void }
         def initialize(logger: nil)
-          @logger = logger
+          @logger = T.let(logger, T.nilable(T.untyped))
         end
 
         # Load rules from a single file
@@ -21,6 +26,7 @@ module Fluent
         # @param rule_type [Symbol] Type of rules (:ignore, :cracking, :violations)
         # @param max_rules [Integer] Maximum number of rules to load from file
         # @return [RuleSet] Loaded rule set
+        sig { params(file_path: String, rule_type: T.nilable(Symbol), max_rules: T.nilable(Integer)).returns(RuleSet) }
         def load_file(file_path, rule_type, max_rules: nil)
           raise FileNotFoundError, "File not found: #{file_path}" unless File.exist?(file_path)
 
@@ -30,7 +36,7 @@ module Fluent
 
           log_info "Loading rules from file: #{file_path} (type: #{rule_type})"
 
-          rules = []
+          rules = T.let([], T::Array[Rule])
           line_number = 0
 
           File.foreach(file_path, encoding: 'UTF-8') do |line|
@@ -45,7 +51,7 @@ module Fluent
 
             # Try to create a rule from the line
             begin
-              rule = Rule.new(cleaned_line, rule_type, file_path, line_number)
+              rule = Rule.new(cleaned_line, T.must(rule_type), file_path, line_number)
               # Test pattern compilation immediately to catch invalid regex
               rule.pattern
               rules << rule
@@ -56,12 +62,12 @@ module Fluent
           end
 
           log_info "Loaded #{rules.size} rules from #{file_path}"
-          rule_set = RuleSet.new(rule_type, file_path)
+          rule_set = RuleSet.new(T.must(rule_type), file_path)
           rules.each { |rule| rule_set.add_rule(rule) }
           rule_set
         rescue Encoding::InvalidByteSequenceError, Encoding::UndefinedConversionError => e
           log_error "Encoding error reading file #{file_path}: #{e.message}"
-          RuleSet.new(rule_type, file_path)
+          RuleSet.new(T.must(rule_type), file_path)
         end
 
         # Load rules from a directory
@@ -70,12 +76,16 @@ module Fluent
         # @param recursive [Boolean] Whether to scan recursively
         # @param max_rules [Integer] Maximum number of rules per file
         # @return [Array<RuleSet>] Array of loaded rule sets
+        sig do
+          params(dir_path: String, rule_type: T.nilable(Symbol), recursive: T::Boolean,
+                 max_rules: T.nilable(Integer)).returns(T::Array[RuleSet])
+        end
         def load_directory(dir_path, rule_type, recursive: true, max_rules: nil)
           raise FileNotFoundError, "Directory not found: #{dir_path}" unless Dir.exist?(dir_path)
 
           log_info "Loading rules from directory: #{dir_path} (recursive: #{recursive})"
 
-          rule_sets = []
+          rule_sets = T.let([], T::Array[RuleSet])
           pattern = recursive ? File.join(dir_path, '**', '*') : File.join(dir_path, '*')
 
           Dir.glob(pattern).each do |file_path|
@@ -88,7 +98,7 @@ module Fluent
 
             begin
               rule_set = load_file(file_path, detected_type, max_rules: max_rules)
-              rule_sets << rule_set if rule_set.size > 0
+              rule_sets << rule_set unless rule_set.empty?
             rescue FileNotFoundError, ParseError => e
               log_error "Error loading file #{file_path}: #{e.message}"
               # Continue with other files
@@ -104,6 +114,7 @@ module Fluent
         # Clean a line by removing comments and whitespace
         # @param line [String] Raw line from file
         # @return [String] Cleaned line
+        sig { params(line: String).returns(String) }
         def clean_line(line)
           # Remove comments (lines starting with #)
           line = line.sub(/#.*$/, '')
@@ -114,6 +125,7 @@ module Fluent
         # Detect rule type from file path
         # @param file_path [String] Path to the file
         # @return [Symbol, nil] Detected rule type or nil
+        sig { params(file_path: String).returns(T.nilable(Symbol)) }
         def detect_rule_type(file_path)
           RuleTypes.detect_from_path(file_path)
         end
@@ -121,6 +133,7 @@ module Fluent
         # Check if a file should be skipped
         # @param file_path [String] Path to the file
         # @return [Boolean] True if file should be skipped
+        sig { params(file_path: String).returns(T::Boolean) }
         def should_skip_file?(file_path)
           filename = File.basename(file_path)
 
@@ -133,14 +146,17 @@ module Fluent
         end
 
         # Logging helpers
+        sig { params(message: String).void }
         def log_info(message)
           @logger&.info(message)
         end
 
+        sig { params(message: String).void }
         def log_warning(message)
           @logger&.warn(message)
         end
 
+        sig { params(message: String).void }
         def log_error(message)
           @logger&.error(message)
         end

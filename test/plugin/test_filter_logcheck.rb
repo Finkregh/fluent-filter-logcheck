@@ -1,3 +1,4 @@
+# typed: false
 # frozen_string_literal: true
 
 require_relative '../helper'
@@ -88,7 +89,7 @@ class FilterLogcheckTest < Test::Unit::TestCase
         path /etc/logcheck/cracking.d
         type cracking
       </rules>
-      
+
       match_field message
       mark_matches true
       mark_field_prefix logcheck_

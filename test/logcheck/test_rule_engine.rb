@@ -1,3 +1,4 @@
+# typed: false
 # frozen_string_literal: true
 
 require_relative '../helper'
@@ -64,7 +65,7 @@ class RuleEngineTest < Test::Unit::TestCase
     test 'passes message through when no rules loaded' do
       message = 'Dec  8 20:15:32 hostname test: Some message'
       decision = @engine.filter(message)
-      
+
       assert_true decision.pass?
       assert_false decision.matched?
       assert_equal message, decision.message
@@ -73,7 +74,7 @@ class RuleEngineTest < Test::Unit::TestCase
     test 'updates statistics for passed messages' do
       message = 'Dec  8 20:15:32 hostname test: Some message'
       @engine.filter(message)
-      
+
       stats = @engine.statistics
       assert_equal 1, stats[:total_messages]
       assert_equal 0, stats[:ignored_messages]
@@ -83,7 +84,7 @@ class RuleEngineTest < Test::Unit::TestCase
   end
 
   sub_test_case 'filtering with ignore rules' do
-    def setup
+    define_method(:setup) do
       super
       @engine.add_rule_set(@ignore_rule_set)
     end
@@ -91,7 +92,7 @@ class RuleEngineTest < Test::Unit::TestCase
     test 'ignores message matching ignore rule' do
       message = 'Dec  8 20:15:32 hostname systemd[1]: Started some service.'
       decision = @engine.filter(message)
-      
+
       assert_true decision.ignore?
       assert_true decision.matched?
       assert_equal :ignore, decision.rule_type
@@ -101,7 +102,7 @@ class RuleEngineTest < Test::Unit::TestCase
     test 'passes message not matching ignore rule' do
       message = 'Dec  8 20:15:32 hostname sshd[1234]: Connection from 192.168.1.1'
       decision = @engine.filter(message)
-      
+
       assert_true decision.pass?
       assert_false decision.matched?
     end
@@ -109,7 +110,7 @@ class RuleEngineTest < Test::Unit::TestCase
     test 'updates statistics for ignored messages' do
       message = 'Dec  8 20:15:32 hostname systemd[1]: Started some service.'
       @engine.filter(message)
-      
+
       stats = @engine.statistics
       assert_equal 1, stats[:total_messages]
       assert_equal 1, stats[:ignored_messages]
@@ -120,7 +121,7 @@ class RuleEngineTest < Test::Unit::TestCase
   end
 
   sub_test_case 'filtering with cracking rules' do
-    def setup
+    define_method(:setup) do
       super
       @engine.add_rule_set(@cracking_rule_set)
     end
@@ -128,7 +129,7 @@ class RuleEngineTest < Test::Unit::TestCase
     test 'alerts on message matching cracking rule' do
       message = 'Dec  8 20:15:32 hostname sshd[1234]: Failed password for user from 192.168.1.1'
       decision = @engine.filter(message)
-      
+
       assert_true decision.alert?
       assert_true decision.matched?
       assert_equal :cracking, decision.rule_type
@@ -138,7 +139,7 @@ class RuleEngineTest < Test::Unit::TestCase
     test 'updates statistics for alert messages' do
       message = 'Dec  8 20:15:32 hostname sshd[1234]: Failed password for user from 192.168.1.1'
       @engine.filter(message)
-      
+
       stats = @engine.statistics
       assert_equal 1, stats[:total_messages]
       assert_equal 0, stats[:ignored_messages]
@@ -149,7 +150,7 @@ class RuleEngineTest < Test::Unit::TestCase
   end
 
   sub_test_case 'filtering with violations rules' do
-    def setup
+    define_method(:setup) do
       super
       @engine.add_rule_set(@violations_rule_set)
     end
@@ -157,7 +158,7 @@ class RuleEngineTest < Test::Unit::TestCase
     test 'alerts on message matching violations rule' do
       message = 'Dec  8 20:15:32 hostname sudo: user : command not allowed ; TTY=pts/0'
       decision = @engine.filter(message)
-      
+
       assert_true decision.alert?
       assert_true decision.matched?
       assert_equal :violations, decision.rule_type
@@ -165,7 +166,7 @@ class RuleEngineTest < Test::Unit::TestCase
   end
 
   sub_test_case 'rule precedence' do
-    def setup
+    define_method(:setup) do
       super
       @engine.add_rule_sets([@ignore_rule_set, @cracking_rule_set, @violations_rule_set])
     end
@@ -174,13 +175,13 @@ class RuleEngineTest < Test::Unit::TestCase
       # Create overlapping rules where both ignore and cracking could match
       ignore_rule_set = create_rule_set(:ignore, ['^.* sshd\\[[0-9]+\\]: .*$'])
       cracking_rule_set = create_rule_set(:cracking, ['^.* sshd\\[[0-9]+\\]: Failed .*$'])
-      
+
       engine = Fluent::Plugin::Logcheck::RuleEngine.new
       engine.add_rule_sets([ignore_rule_set, cracking_rule_set])
-      
+
       message = 'Dec  8 20:15:32 hostname sshd[1234]: Failed password for user'
       decision = engine.filter(message)
-      
+
       # Should alert (cracking) not ignore, even though both rules match
       assert_true decision.alert?
       assert_equal :cracking, decision.rule_type
@@ -190,13 +191,13 @@ class RuleEngineTest < Test::Unit::TestCase
       # Create overlapping rules
       ignore_rule_set = create_rule_set(:ignore, ['^.* sudo: .*$'])
       violations_rule_set = create_rule_set(:violations, ['^.* sudo: .* : command not allowed .*$'])
-      
+
       engine = Fluent::Plugin::Logcheck::RuleEngine.new
       engine.add_rule_sets([ignore_rule_set, violations_rule_set])
-      
+
       message = 'Dec  8 20:15:32 hostname sudo: user : command not allowed ; TTY=pts/0'
       decision = engine.filter(message)
-      
+
       # Should alert (violations) not ignore
       assert_true decision.alert?
       assert_equal :violations, decision.rule_type
@@ -206,13 +207,13 @@ class RuleEngineTest < Test::Unit::TestCase
       # Create overlapping rules
       violations_rule_set = create_rule_set(:violations, ['^.* sshd\\[[0-9]+\\]: .*$'])
       cracking_rule_set = create_rule_set(:cracking, ['^.* sshd\\[[0-9]+\\]: Failed .*$'])
-      
+
       engine = Fluent::Plugin::Logcheck::RuleEngine.new
       engine.add_rule_sets([violations_rule_set, cracking_rule_set])
-      
+
       message = 'Dec  8 20:15:32 hostname sshd[1234]: Failed password for user'
       decision = engine.filter(message)
-      
+
       # Should be cracking alert, not violations alert
       assert_true decision.alert?
       assert_equal :cracking, decision.rule_type
@@ -220,7 +221,7 @@ class RuleEngineTest < Test::Unit::TestCase
   end
 
   sub_test_case 'statistics' do
-    def setup
+    define_method(:setup) do
       super
       @engine.add_rule_sets([@ignore_rule_set, @cracking_rule_set])
     end
@@ -231,9 +232,9 @@ class RuleEngineTest < Test::Unit::TestCase
         'Dec  8 20:15:32 hostname sshd[1234]: Failed password for user', # cracking
         'Dec  8 20:15:32 hostname test: Some other message' # pass
       ]
-      
+
       messages.each { |msg| @engine.filter(msg) }
-      
+
       stats = @engine.statistics
       assert_equal 3, stats[:total_messages]
       assert_equal 1, stats[:ignored_messages]
@@ -246,7 +247,7 @@ class RuleEngineTest < Test::Unit::TestCase
     test 'resets statistics' do
       @engine.filter('Dec  8 20:15:32 hostname systemd[1]: Started some service.')
       @engine.reset_statistics
-      
+
       stats = @engine.statistics
       assert_equal 0, stats[:total_messages]
       assert_equal 0, stats[:ignored_messages]
@@ -259,11 +260,11 @@ class RuleEngineTest < Test::Unit::TestCase
   sub_test_case 'rule precedence constants' do
     test 'defines correct precedence values' do
       precedence = Fluent::Plugin::Logcheck::RuleEngine::RULE_PRECEDENCE
-      
+
       assert_equal 3, precedence[:cracking]
       assert_equal 2, precedence[:violations]
       assert_equal 1, precedence[:ignore]
-      
+
       # Verify precedence order
       assert_operator precedence[:cracking], :>, precedence[:violations]
       assert_operator precedence[:violations], :>, precedence[:ignore]

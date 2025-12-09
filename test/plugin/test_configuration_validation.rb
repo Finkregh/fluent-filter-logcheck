@@ -1,3 +1,4 @@
+# typed: false
 # frozen_string_literal: true
 
 require_relative '../helper'
@@ -21,7 +22,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
   sub_test_case 'rule source validation' do
     test 'raises error when no rule sources specified' do
       config = %()
-      
+
       assert_raise(Fluent::ConfigError) do
         create_driver(config)
       end
@@ -31,7 +32,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       config = %(
         rules_file #{@test_file}
       )
-      
+
       assert_nothing_raised do
         create_driver(config)
       end
@@ -41,7 +42,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       config = %(
         rules_dir #{@temp_dir}
       )
-      
+
       assert_nothing_raised do
         create_driver(config)
       end
@@ -54,7 +55,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
           type ignore
         </rules>
       )
-      
+
       assert_nothing_raised do
         create_driver(config)
       end
@@ -65,7 +66,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       config = %(
         rules_file #{non_existent_file}
       )
-      
+
       # Should not raise during configure, but should log warning
       d = create_driver(config)
       assert_not_nil d.instance
@@ -76,7 +77,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       config = %(
         rules_dir #{non_existent_dir}
       )
-      
+
       # Should not raise during configure, but should log warning
       d = create_driver(config)
       assert_not_nil d.instance
@@ -89,7 +90,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
         rules_file #{@test_file}
         cache_size 0
       )
-      
+
       assert_raise(Fluent::ConfigError) do
         create_driver(config)
       end
@@ -100,7 +101,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
         rules_file #{@test_file}
         cache_size -100
       )
-      
+
       assert_raise(Fluent::ConfigError) do
         create_driver(config)
       end
@@ -111,7 +112,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
         rules_file #{@test_file}
         max_rules_per_file 0
       )
-      
+
       assert_raise(Fluent::ConfigError) do
         create_driver(config)
       end
@@ -122,7 +123,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
         rules_file #{@test_file}
         max_rules_per_file -50
       )
-      
+
       assert_raise(Fluent::ConfigError) do
         create_driver(config)
       end
@@ -133,7 +134,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
         rules_file #{@test_file}
         match_field ""
       )
-      
+
       assert_raise(Fluent::ConfigError) do
         create_driver(config)
       end
@@ -145,7 +146,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
         mark_matches true
         mark_field_prefix ""
       )
-      
+
       assert_raise(Fluent::ConfigError) do
         create_driver(config)
       end
@@ -158,7 +159,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
         rules_file #{@test_file}
         rule_priority ["invalid_type", "cracking"]
       )
-      
+
       assert_raise(Fluent::ConfigError) do
         create_driver(config)
       end
@@ -169,7 +170,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
         rules_file #{@test_file}
         rule_priority ["cracking", "violations", "ignore"]
       )
-      
+
       assert_nothing_raised do
         create_driver(config)
       end
@@ -180,7 +181,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
         rules_file #{@test_file}
         rule_priority []
       )
-      
+
       assert_raise(Fluent::ConfigError) do
         create_driver(config)
       end
@@ -191,7 +192,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
         rules_file #{@test_file}
         rule_priority ["cracking", "cracking", "ignore"]
       )
-      
+
       assert_raise(Fluent::ConfigError) do
         create_driver(config)
       end
@@ -205,7 +206,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
           type ignore
         </rules>
       )
-      
+
       assert_raise(Fluent::ConfigError) do
         create_driver(config)
       end
@@ -218,7 +219,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
           type ignore
         </rules>
       )
-      
+
       assert_raise(Fluent::ConfigError) do
         create_driver(config)
       end
@@ -231,7 +232,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
           type invalid_type
         </rules>
       )
-      
+
       assert_raise(Fluent::ConfigError) do
         create_driver(config)
       end
@@ -245,7 +246,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
           recursive false
         </rules>
       )
-      
+
       assert_nothing_raised do
         create_driver(config)
       end
@@ -258,7 +259,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
         rules_file #{@test_file}
         default_action invalid_action
       )
-      
+
       assert_raise(Fluent::ConfigError) do
         create_driver(config)
       end
@@ -270,7 +271,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
           rules_file #{@test_file}
           default_action #{action}
         )
-        
+
         assert_nothing_raised do
           create_driver(config)
         end
@@ -283,7 +284,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       config = %(
         rules_file /absolute/path/to/rules
       )
-      
+
       # Should not raise during configure (path validation happens during initialization)
       assert_nothing_raised do
         create_driver(config)
@@ -294,7 +295,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       config = %(
         rules_file ./relative/path/to/rules
       )
-      
+
       # Should not raise during configure (path validation happens during initialization)
       assert_nothing_raised do
         create_driver(config)
@@ -304,11 +305,11 @@ class ConfigurationValidationTest < Test::Unit::TestCase
     test 'handles special characters in paths' do
       special_file = File.join(@temp_dir, 'rules with spaces & symbols.txt')
       File.write(special_file, 'test.*pattern')
-      
+
       config = %(
         rules_file "#{special_file}"
       )
-      
+
       assert_nothing_raised do
         create_driver(config)
       end
@@ -325,7 +326,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
           type violations
         </rules>
       )
-      
+
       assert_nothing_raised do
         create_driver(config)
       end
@@ -339,7 +340,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
         cache_size 500
         max_rules_per_file 100
       )
-      
+
       d = create_driver(config)
       assert_equal true, d.instance.mark_matches
       assert_equal 'custom_', d.instance.mark_field_prefix
@@ -353,14 +354,14 @@ class ConfigurationValidationTest < Test::Unit::TestCase
       # Create a file and make it unreadable (if possible)
       restricted_file = File.join(@temp_dir, 'restricted.rules')
       File.write(restricted_file, 'test.*pattern')
-      
+
       begin
         File.chmod(0o000, restricted_file)
-        
+
         config = %(
           rules_file #{restricted_file}
         )
-        
+
         # Should not raise, but should log error
         d = create_driver(config)
         assert_not_nil d.instance
@@ -376,11 +377,11 @@ class ConfigurationValidationTest < Test::Unit::TestCase
     test 'handles malformed rule files gracefully' do
       malformed_file = File.join(@temp_dir, 'malformed.rules')
       File.write(malformed_file, '[invalid_regex')
-      
+
       config = %(
         rules_file #{malformed_file}
       )
-      
+
       # Should not raise during configure
       d = create_driver(config)
       assert_not_nil d.instance
@@ -396,7 +397,7 @@ class ConfigurationValidationTest < Test::Unit::TestCase
   def create_test_files
     @test_file = File.join(@temp_dir, 'test.rules')
     File.write(@test_file, "^test.*pattern$\n^another.*pattern$")
-    
+
     # Create a test directory with some rule files
     test_subdir = File.join(@temp_dir, 'ignore.d.server')
     FileUtils.mkdir_p(test_subdir)

@@ -1,3 +1,4 @@
+# typed: false
 # frozen_string_literal: true
 
 $LOAD_PATH.unshift(File.expand_path('../lib', __dir__))
@@ -11,12 +12,12 @@ require 'fluent/test/helpers'
 if ENV['COVERAGE']
   require 'simplecov'
   require 'simplecov-cobertura'
-  
+
   SimpleCov.start do
     add_filter '/test/'
     add_filter '/vendor/'
     add_filter '/knowlege/'
-    
+
     # Configure formatters for both HTML and Cobertura XML
     if ENV['CI']
       # In CI, generate both HTML and Cobertura XML
@@ -28,11 +29,11 @@ if ENV['COVERAGE']
       # Locally, just generate HTML to avoid XML parsing issues
       formatter SimpleCov::Formatter::HTMLFormatter
     end
-    
+
     # Set minimum coverage thresholds (adjusted for current codebase)
     minimum_coverage 30
     minimum_coverage_by_file 20
-    
+
     # Track branches for more detailed coverage
     enable_coverage :branch
   end

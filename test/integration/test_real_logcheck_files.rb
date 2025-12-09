@@ -1,3 +1,4 @@
+# typed: false
 # frozen_string_literal: true
 
 require_relative '../helper'
@@ -170,12 +171,12 @@ class RealLogcheckFilesTest < Test::Unit::TestCase
     test_cases.each do |test_case|
       dir_path = File.join(@temp_dir, File.dirname(test_case[:path]))
       FileUtils.mkdir_p(dir_path)
-      
+
       file_path = File.join(@temp_dir, test_case[:path])
       File.write(file_path, "test_pattern_#{test_case[:expected_type]}")
 
       rule_set = @rule_loader.load_file(file_path, nil) # Auto-detect type
-      assert_equal test_case[:expected_type], rule_set.type, 
+      assert_equal test_case[:expected_type], rule_set.type,
                    "Wrong type detected for path: #{test_case[:path]}"
     end
   end
@@ -183,14 +184,14 @@ class RealLogcheckFilesTest < Test::Unit::TestCase
   def test_performance_with_large_rule_files
     # Test performance with larger rule files (similar to real logcheck databases)
     large_rules = []
-    
+
     # Generate realistic systemd-style rules
     100.times do |i|
       large_rules << "^([[:alpha:]]{3} [ :[:digit:]]{11}|[0-9T:.+-]{32}) [._[:alnum:]-]+ systemd\\[[0-9]+\\]: Test pattern #{i} .+\\.$"
     end
 
     large_file = create_temp_file('large_systemd', large_rules)
-    
+
     start_time = Time.now
     rule_set = @rule_loader.load_file(large_file, :ignore)
     load_time = Time.now - start_time
@@ -200,7 +201,7 @@ class RealLogcheckFilesTest < Test::Unit::TestCase
 
     # Test pattern matching performance
     test_message = 'Dec  8 20:15:32 hostname systemd[1]: Test pattern 50 some service started.'
-    
+
     start_time = Time.now
     matching_rule = rule_set.match(test_message)
     match_time = Time.now - start_time

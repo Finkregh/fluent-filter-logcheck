@@ -2,6 +2,7 @@
 
 require 'bundler/gem_tasks'
 require 'rake/testtask'
+require 'rubocop/rake_task'
 
 Rake::TestTask.new(:test) do |test|
   test.libs << 'lib' << 'test'
@@ -11,9 +12,36 @@ end
 
 task default: :test
 
-desc 'Run RuboCop'
-task :rubocop do
-  sh 'rubocop'
+desc 'Run RuboCop on all files'
+RuboCop::RakeTask.new(:rubocop) do |task|
+  task.patterns = ['lib/**/*.rb', 'test/**/*.rb']
+  # don't abort rake on failure
+  task.fail_on_error = false
+end
+
+desc 'Run RuboCop on lib directory'
+RuboCop::RakeTask.new('rubocop:lib') do |task|
+  task.patterns = ['lib/**/*.rb']
+  # only show the files with failures
+  task.formatters = ['files']
+  # don't abort rake on failure
+  task.fail_on_error = false
+end
+
+desc 'Run RuboCop on test directory'
+RuboCop::RakeTask.new('rubocop:test') do |task|
+  task.patterns = ['test/**/*.rb']
+  # only show the files with failures
+  task.formatters = ['files']
+  # don't abort rake on failure
+  task.fail_on_error = false
+end
+
+desc 'Autocorrect RuboCop offenses'
+RuboCop::RakeTask.new('rubocop:autocorrect') do |task|
+  task.patterns = ['lib/**/*.rb', 'test/**/*.rb']
+  task.options = ['--autocorrect']
+  task.fail_on_error = false
 end
 
 desc 'Run Brakeman security scan'

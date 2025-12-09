@@ -31,19 +31,4 @@ Gem::Specification.new do |spec|
 
   # Runtime dependencies
   spec.add_dependency 'fluentd', ['>= 0.14.10', '< 2']
-
-  # Development dependencies
-  spec.add_development_dependency 'brakeman', '~> 6.0'
-  spec.add_development_dependency 'bundler', '~> 2.0'
-  spec.add_development_dependency 'bundler-audit', '~> 0.8'
-  spec.add_development_dependency 'rake', '~> 13.0'
-  spec.add_development_dependency 'rubocop', '~> 1.0'
-  spec.add_development_dependency 'rubocop-performance', '~> 1.0'
-  spec.add_development_dependency 'rubocop-rake', '~> 0.7'
-  spec.add_development_dependency 'simplecov', '~> 0.21'
-  spec.add_development_dependency 'simplecov-cobertura', '~> 2.1'
-  spec.add_development_dependency 'sorbet', '~> 0.5'
-  spec.add_development_dependency 'sorbet-runtime', '~> 0.5'
-  spec.add_development_dependency 'tapioca', '~> 0.17'
-  spec.add_development_dependency 'test-unit', '~> 3.0'
 end

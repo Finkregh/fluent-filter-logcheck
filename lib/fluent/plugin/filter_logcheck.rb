@@ -1,6 +1,8 @@
+# typed: strict
 # frozen_string_literal: true
 
 require 'fluent/plugin/filter'
+require 'sorbet-runtime'
 require_relative 'logcheck/rule_types'
 require_relative 'logcheck/rule'
 require_relative 'logcheck/rule_loader'
@@ -11,6 +13,8 @@ module Fluent
   module Plugin
     # Fluentd filter plugin that applies logcheck rules for log filtering
     class LogcheckFilter < Filter
+      extend T::Sig
+
       Fluent::Plugin.register_filter('logcheck', self)
 
       helpers :record_accessor
@@ -43,23 +47,25 @@ module Fluent
       # Rule priority configuration
       config_param :rule_priority, :array, default: %i(cracking violations ignore)
 
+      sig { void }
       def initialize
         super
-        @rule_sets = {}
-        @rule_engine = nil
-        @filter_decision = nil
-        @match_accessor = nil
-        @statistics = {
-          processed: 0,
-          ignored: 0,
-          alerted: 0,
-          passed: 0,
-          errors: 0,
-          start_time: nil
-        }
-        @last_stats_log = nil
+        @rule_sets = T.let({}, T::Hash[String, T.untyped])
+        @rule_engine = T.let(nil, T.nilable(T.untyped))
+        @filter_decision = T.let(nil, T.nilable(T.untyped))
+        @match_accessor = T.let(nil, T.nilable(T.untyped))
+        @statistics = T.let({
+                              processed: 0,
+                              ignored: 0,
+                              alerted: 0,
+                              passed: 0,
+                              errors: 0,
+                              start_time: nil
+                            }, T::Hash[Symbol, T.untyped])
+        @last_stats_log = T.let(nil, T.nilable(Time))
       end
 
+      sig { params(conf: T.untyped).void }
       def configure(conf)
         super
 
@@ -73,6 +79,7 @@ module Fluent
         initialize_components
       end
 
+      sig { void }
       def start
         super
         @statistics[:start_time] = Time.now
@@ -88,12 +95,14 @@ module Fluent
         log_rule_summary
       end
 
+      sig { void }
       def shutdown
         super
         log_final_statistics
         log.info 'Logcheck filter stopped'
       end
 
+      sig { params(_tag: String, _time: T.untyped, record: T::Hash[String, T.untyped]).returns(T.nilable(T::Hash[String, T.untyped])) }
       def filter(_tag, _time, record)
         @statistics[:processed] += 1
 
@@ -211,7 +220,7 @@ module Fluent
         total_rule_count = total_rules
         log.info "Loaded #{total_rule_count} rules from #{@rule_sets.size} rule sets"
 
-        if @debug_mode && total_rule_count == 0
+        if @debug_mode && total_rule_count.zero?
           log.warn 'No rules loaded! Check your configuration and rule file paths.'
         end
 
@@ -370,7 +379,7 @@ module Fluent
 
       def log_current_statistics
         uptime = Time.now - @statistics[:start_time]
-        rate = @statistics[:processed] / uptime if uptime > 0
+        rate = @statistics[:processed] / uptime if uptime.positive?
 
         log.info '=== Logcheck Statistics ==='
         log.info "  Uptime: #{uptime.round(1)}s"

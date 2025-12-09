@@ -1,3 +1,4 @@
+# typed: false
 # frozen_string_literal: true
 
 require_relative '../helper'
@@ -27,9 +28,9 @@ class EndToEndFilteringTest < Test::Unit::TestCase
       mark_field_prefix logcheck_
       log_rule_errors true
     )
-    
+
     d = create_driver(config)
-    
+
     # Test messages that should trigger different behaviors
     test_cases = [
       {
@@ -62,7 +63,7 @@ class EndToEndFilteringTest < Test::Unit::TestCase
 
     # Analyze results
     filtered_records = d.filtered_records
-    
+
     # Should have 3 records (ignore case drops the record)
     assert_equal 3, filtered_records.size, 'Expected 3 records after filtering'
 
@@ -96,20 +97,20 @@ class EndToEndFilteringTest < Test::Unit::TestCase
       recursive_scan true
       mark_matches true
     )
-    
+
     d = create_driver(config)
-    
+
     # This message could match both ignore and cracking rules
     # but cracking should take precedence
     message = 'Dec  8 20:15:32 hostname sshd[1234]: Failed password for root from 192.168.1.1'
-    
+
     d.run(default_tag: 'test.precedence') do
       d.feed(event_time, { 'message' => message })
     end
 
     filtered_records = d.filtered_records
     assert_equal 1, filtered_records.size, 'Should have one record'
-    
+
     record = filtered_records.first
     assert_true record['logcheck_alert'], 'Should be marked as alert (not ignored)'
     assert_equal 'cracking', record['logcheck_rule_type'], 'Should be cracking type'
@@ -118,22 +119,22 @@ class EndToEndFilteringTest < Test::Unit::TestCase
   def test_performance_with_many_rules
     # Create a larger rule set for performance testing
     create_large_rule_set
-    
+
     config = %(
       rules_dir #{@temp_dir}
       recursive_scan true
       mark_matches false
       log_rule_errors false
     )
-    
+
     d = create_driver(config)
-    
+
     # Test with many messages
     messages = []
     100.times do |i|
       messages << "Dec  8 20:15:32 hostname app#{i}: Test message #{i}"
     end
-    
+
     start_time = Time.now
     d.run(default_tag: 'test.performance') do
       messages.each do |message|
@@ -141,12 +142,12 @@ class EndToEndFilteringTest < Test::Unit::TestCase
       end
     end
     end_time = Time.now
-    
+
     processing_time = end_time - start_time
-    
+
     # Should process 100 messages in reasonable time
     assert_operator processing_time, :<, 1.0, 'Should process 100 messages within 1 second'
-    
+
     # All messages should pass through (no matching rules)
     assert_equal 100, d.filtered_records.size, 'All messages should pass through'
   end
@@ -186,12 +187,12 @@ class EndToEndFilteringTest < Test::Unit::TestCase
     # Create a large ignore rule set for performance testing
     large_ignore_dir = File.join(@temp_dir, 'ignore.d.performance')
     FileUtils.mkdir_p(large_ignore_dir)
-    
+
     large_rules = []
     100.times do |i|
       large_rules << "^.* performance_test_#{i}: .*$"
     end
-    
+
     File.write(File.join(large_ignore_dir, 'performance'), large_rules.join("\n"))
   end
 end

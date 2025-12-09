@@ -1,3 +1,4 @@
+# typed: false
 # frozen_string_literal: true
 
 require_relative '../helper'
@@ -60,7 +61,7 @@ class RuleTest < Test::Unit::TestCase
   def test_invalid_pattern
     # Test invalid regex pattern handling
     rule = Fluent::Plugin::Logcheck::Rule.new('[invalid', :ignore, '/test', 1)
-    
+
     assert_raise(Fluent::Plugin::Logcheck::PatternCompileError) do
       rule.pattern
     end
@@ -69,11 +70,11 @@ class RuleTest < Test::Unit::TestCase
   def test_invalid_pattern_error_message
     # Test that error message includes useful information
     rule = Fluent::Plugin::Logcheck::Rule.new('[invalid', :ignore, '/test/file', 42)
-    
+
     error = assert_raise(Fluent::Plugin::Logcheck::PatternCompileError) do
       rule.pattern
     end
-    
+
     assert_match(/Invalid regex pattern/, error.message)
     assert_match(/\[invalid/, error.message)
     assert_match(%r{/test/file:42}, error.message)
@@ -82,7 +83,7 @@ class RuleTest < Test::Unit::TestCase
   def test_match_with_invalid_pattern
     # Test matching with invalid pattern should raise PatternCompileError
     rule = Fluent::Plugin::Logcheck::Rule.new('[invalid', :ignore, '/test', 1)
-    
+
     assert_raise(Fluent::Plugin::Logcheck::PatternCompileError) do
       rule.match?('test')
     end
@@ -91,7 +92,7 @@ class RuleTest < Test::Unit::TestCase
   def test_metadata
     # Test rule metadata generation
     metadata = @rule.metadata
-    
+
     assert_equal :ignore, metadata[:type]
     assert_equal '/test/file', metadata[:source_file]
     assert_equal 42, metadata[:line_number]
@@ -102,11 +103,11 @@ class RuleTest < Test::Unit::TestCase
     # Test with more complex logcheck-style patterns
     pattern = '^(\w{3} [ :[:digit:]]{11}|[0-9T:.+-]{32}) [._[:alnum:]-]+ systemd\[[0-9]+\]: (Start|Stopp)ed .+\.$'
     rule = Fluent::Plugin::Logcheck::Rule.new(pattern, :ignore, '/test', 1)
-    
+
     # Should match systemd messages
     assert_true rule.match?('Dec  8 10:00:00 server systemd[1]: Started nginx.service.')
     assert_true rule.match?('Dec  8 10:00:00 server systemd[1]: Stopped nginx.service.')
-    
+
     # Should not match other messages
     assert_false rule.match?('Dec  8 10:00:00 server nginx[1234]: Starting up')
     assert_false rule.match?('Dec  8 10:00:00 server systemd[1]: Reached target')
@@ -115,7 +116,7 @@ class RuleTest < Test::Unit::TestCase
   def test_different_rule_types
     # Test rules with different types
     types = %i(ignore cracking violations)
-    
+
     types.each do |type|
       rule = Fluent::Plugin::Logcheck::Rule.new('test', type, '/test', 1)
       assert_equal type, rule.type
@@ -129,14 +130,14 @@ class RuleTest < Test::Unit::TestCase
     # object is the same on multiple calls
     pattern1 = @rule.pattern
     pattern2 = @rule.pattern
-    
+
     assert_same pattern1, pattern2
   end
 
   def test_unicode_pattern
     # Test with unicode characters in pattern
     rule = Fluent::Plugin::Logcheck::Rule.new('café.*résumé', :ignore, '/test', 1)
-    
+
     assert_true rule.match?('café and résumé')
     assert_false rule.match?('cafe and resume')
   end
@@ -144,10 +145,10 @@ class RuleTest < Test::Unit::TestCase
   def test_multiline_pattern
     # Test with multiline matching
     rule = Fluent::Plugin::Logcheck::Rule.new('line1.*line2', :ignore, '/test', 1)
-    
+
     # Should not match across lines by default
     assert_false rule.match?("line1\nline2")
-    
+
     # Should match within single line
     assert_true rule.match?('line1 something line2')
   end

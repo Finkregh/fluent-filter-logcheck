@@ -1,3 +1,4 @@
+# typed: false
 # frozen_string_literal: true
 
 require_relative '../helper'
@@ -15,7 +16,7 @@ class FilterDecisionTest < Test::Unit::TestCase
   sub_test_case 'initialization' do
     test 'creates ignore decision with rule' do
       decision = Fluent::Plugin::Logcheck::FilterDecision.new(:ignore, @rule, @message)
-      
+
       assert_equal :ignore, decision.decision
       assert_equal @rule, decision.rule
       assert_equal :ignore, decision.rule_type
@@ -24,7 +25,7 @@ class FilterDecisionTest < Test::Unit::TestCase
 
     test 'creates pass decision without rule' do
       decision = Fluent::Plugin::Logcheck::FilterDecision.new(:pass, nil, @message)
-      
+
       assert_equal :pass, decision.decision
       assert_nil decision.rule
       assert_nil decision.rule_type
@@ -98,7 +99,7 @@ class FilterDecisionTest < Test::Unit::TestCase
     test 'returns hash with all fields for decision with rule' do
       decision = Fluent::Plugin::Logcheck::FilterDecision.new(:ignore, @rule, @message)
       hash = decision.to_h
-      
+
       assert_equal :ignore, hash[:decision]
       assert_equal :ignore, hash[:rule_type]
       assert_equal 'test.*pattern', hash[:pattern]
@@ -110,7 +111,7 @@ class FilterDecisionTest < Test::Unit::TestCase
     test 'returns hash with nil fields for decision without rule' do
       decision = Fluent::Plugin::Logcheck::FilterDecision.new(:pass, nil, @message)
       hash = decision.to_h
-      
+
       assert_equal :pass, hash[:decision]
       assert_nil hash[:rule_type]
       assert_nil hash[:pattern]
@@ -123,7 +124,7 @@ class FilterDecisionTest < Test::Unit::TestCase
       long_message = 'a' * 150
       decision = Fluent::Plugin::Logcheck::FilterDecision.new(:pass, nil, long_message)
       hash = decision.to_h
-      
+
       assert_equal 101, hash[:message_preview].length
       assert_equal long_message[0..100], hash[:message_preview]
     end
@@ -132,7 +133,7 @@ class FilterDecisionTest < Test::Unit::TestCase
   sub_test_case 'factory methods' do
     test 'ignore creates ignore decision' do
       decision = Fluent::Plugin::Logcheck::FilterDecision.ignore(@rule, @message)
-      
+
       assert_equal :ignore, decision.decision
       assert_equal @rule, decision.rule
       assert_equal @message, decision.message
@@ -141,7 +142,7 @@ class FilterDecisionTest < Test::Unit::TestCase
 
     test 'alert creates alert decision' do
       decision = Fluent::Plugin::Logcheck::FilterDecision.alert(@rule, @message)
-      
+
       assert_equal :alert, decision.decision
       assert_equal @rule, decision.rule
       assert_equal @message, decision.message
@@ -150,7 +151,7 @@ class FilterDecisionTest < Test::Unit::TestCase
 
     test 'pass creates pass decision' do
       decision = Fluent::Plugin::Logcheck::FilterDecision.pass(@message)
-      
+
       assert_equal :pass, decision.decision
       assert_nil decision.rule
       assert_equal @message, decision.message
