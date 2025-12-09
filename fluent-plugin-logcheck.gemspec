@@ -1,0 +1,47 @@
+# frozen_string_literal: true
+
+lib = File.expand_path('lib', __dir__)
+$LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
+
+Gem::Specification.new do |spec|
+  spec.name          = 'fluent-plugin-logcheck'
+  spec.version       = '1.0.0'
+  spec.authors       = ['Fluentd Logcheck Plugin Developer']
+  spec.email         = ['developer@example.com']
+
+  spec.summary       = 'Fluentd filter plugin that applies logcheck rules for log filtering and security monitoring'
+  spec.description   = 'A Fluentd filter plugin that implements logcheck functionality, allowing users to filter and categorize log entries based on predefined regular expression rules. Supports ignore, cracking, and violations rule types with proper precedence handling.'
+  spec.homepage      = 'https://github.com/example/fluent-plugin-logcheck'
+  spec.license       = 'Apache-2.0'
+
+  spec.files         = Dir[
+    'lib/**/*',
+    'README.md',
+    'CHANGELOG.md',
+    'LICENSE',
+    'fluent-plugin-logcheck.gemspec',
+    'examples/**/*',
+    'docs/**/*'
+  ]
+  spec.bindir        = 'exe'
+  spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
+  spec.require_paths = ['lib']
+
+  spec.required_ruby_version = '>= 2.4.0'
+
+  # Runtime dependencies
+  spec.add_runtime_dependency 'fluentd', ['>= 0.14.10', '< 2']
+
+  # Development dependencies
+  spec.add_development_dependency 'bundler', '~> 2.0'
+  spec.add_development_dependency 'bundler-audit', '~> 0.8'
+  spec.add_development_dependency 'rake', '~> 13.0'
+  spec.add_development_dependency 'test-unit', '~> 3.0'
+  spec.add_development_dependency 'simplecov', '~> 0.21'
+  spec.add_development_dependency 'simplecov-cobertura', '~> 2.1'
+  spec.add_development_dependency 'rubocop', '~> 1.0'
+  spec.add_development_dependency 'sorbet', '~> 0.5'
+  spec.add_development_dependency 'sorbet-runtime', '~> 0.5'
+  spec.add_development_dependency 'tapioca', '~> 0.17'
+  spec.add_development_dependency 'brakeman', '~> 6.0'
+end

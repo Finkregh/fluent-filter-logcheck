@@ -1,0 +1,273 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Run weekly security scans
+    - cron: "0 2 * * 1"
+
+env:
+  RUBY_VERSION: "3.1"
+
+jobs:
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby-version: ["3.2", "3.3", ".ruby-version"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby ${{ matrix.ruby-version }}
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler-cache: true
+
+      - name: Run tests
+        run: |
+          bundle exec rake test
+
+      - name: Check for frozen string literal warnings
+        run: |
+          echo "Checking for frozen string literal warnings..."
+          bundle exec ruby -w -c lib/**/*.rb 2>&1 | grep -i "frozen" || echo "No frozen string literal warnings found in lib/"
+
+  lint:
+    name: Code Quality & Linting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+
+      - name: Run RuboCop
+        run: bundle exec rubocop --format github
+
+      - name: Run RuboCop Performance
+        run: bundle exec rubocop --require rubocop-performance
+
+  security:
+    name: Security Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+
+      - name: Run Brakeman security scan
+        run: |
+          bundle exec brakeman --force --format json --output brakeman-report.json
+          bundle exec brakeman --force --format plain
+
+      - name: Upload Brakeman report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: brakeman-report
+          path: brakeman-report.json
+
+      - name: Bundle Audit
+        run: |
+          gem install bundler-audit
+          bundle audit --update
+
+  coverage:
+    name: Test Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+
+      - name: Run tests with coverage
+        run: bundle exec rake coverage
+        env:
+          COVERAGE: true
+          CI: true
+
+      - name: Code Coverage Report
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: coverage/coverage.xml
+          badge: true
+          fail_below_min: true
+          format: markdown
+          hide_branch_rate: false
+          hide_complexity: true
+          indicators: true
+          output: both
+          thresholds: "60 80"
+
+      - name: Add Coverage PR Comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        if: github.event_name == 'pull_request'
+        with:
+          recreate: true
+          path: code-coverage-results.md
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+
+  build:
+    name: Build Gem
+    runs-on: ubuntu-latest
+    needs: [test, lint, security]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+
+      - name: Build gem
+        run: |
+          gem build fluent-plugin-logcheck.gemspec
+
+      - name: Upload gem artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gem-package
+          path: "*.gem"
+
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [build]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+
+      - name: Download gem artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: gem-package
+
+      - name: Install gem locally
+        run: |
+          gem install *.gem
+
+      - name: Run integration tests
+        run: |
+          bundle exec ruby -Itest test/integration/test_*.rb
+
+  performance:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+
+      - name: Run performance benchmarks
+        run: |
+          bundle exec ruby -Itest test/integration/test_performance_benchmarks.rb
+
+  dependency-check:
+    name: Dependency Security Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+
+      - name: Install bundler-audit
+        run: gem install bundler-audit
+
+      - name: Update vulnerability database
+        run: bundle audit --update
+
+      - name: Check for vulnerable dependencies
+        run: bundle audit
+
+  documentation:
+    name: Documentation Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+          bundler-cache: true
+
+      - name: Generate documentation
+        run: |
+          bundle exec yard doc
+
+      - name: Check documentation coverage
+        run: |
+          bundle exec yard stats --list-undoc
+
+  notify:
+    name: Notification
+    runs-on: ubuntu-latest
+    needs: [test, lint, security, coverage, build, integration]
+    if: always()
+
+    steps:
+      - name: Notify on success
+        if: ${{ needs.test.result == 'success' && needs.lint.result == 'success' && needs.security.result == 'success' }}
+        run: |
+          echo "✅ All CI checks passed successfully!"
+
+      - name: Notify on failure
+        if: ${{ needs.test.result == 'failure' || needs.lint.result == 'failure' || needs.security.result == 'failure' }}
+        run: |
+          echo "❌ Some CI checks failed. Please review the logs."
+          exit 1
