@@ -18,6 +18,7 @@ group :development, :test do
   gem 'rubocop-sorbet', '~> 0.11'
   gem 'simplecov', '~> 0.21'
   gem 'simplecov-cobertura', '~> 2.1'
+  gem 'simplecov-lcov', '~> 0.9'
   gem 'sorbet', '~> 0.5'
   gem 'sorbet-runtime', '~> 0.5'
   gem 'tapioca', require: false
