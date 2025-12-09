@@ -123,7 +123,9 @@ jobs:
           bundler-cache: true
 
       - name: Run tests with coverage
-        run: bundle exec rake coverage
+        run: |
+          bundle exec rake coverage
+          ls -la coverage/
         env:
           COVERAGE: true
           CI: true
