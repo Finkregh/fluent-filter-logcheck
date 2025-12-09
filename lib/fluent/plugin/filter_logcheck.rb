@@ -51,9 +51,9 @@ module Fluent
       def initialize
         super
         @rule_sets = T.let({}, T::Hash[String, T.untyped])
-        @rule_engine = T.let(nil, T.nilable(T.untyped))
-        @filter_decision = T.let(nil, T.nilable(T.untyped))
-        @match_accessor = T.let(nil, T.nilable(T.untyped))
+        @rule_engine = T.let(nil, T.untyped)
+        @filter_decision = T.let(nil, T.untyped)
+        @match_accessor = T.let(nil, T.untyped)
         @statistics = T.let({
                               processed: 0,
                               ignored: 0,
@@ -63,6 +63,24 @@ module Fluent
                               start_time: nil
                             }, T::Hash[Symbol, T.untyped])
         @last_stats_log = T.let(nil, T.nilable(Time))
+        
+        # Declare configuration variables
+        @match_field = T.let('', String)
+        @default_action = T.let(:keep, Symbol)
+        @mark_matches = T.let(false, T::Boolean)
+        @mark_field_prefix = T.let('', String)
+        @cache_size = T.let(0, Integer)
+        @recursive_scan = T.let(true, T::Boolean)
+        @ignore_parse_errors = T.let(true, T::Boolean)
+        @log_rule_errors = T.let(true, T::Boolean)
+        @max_rules_per_file = T.let(0, Integer)
+        @debug_mode = T.let(false, T::Boolean)
+        @log_statistics = T.let(false, T::Boolean)
+        @statistics_interval = T.let(0, Integer)
+        @rules_file = T.let(nil, T.nilable(String))
+        @rules_dir = T.let(nil, T.nilable(String))
+        @rule_configs = T.let([], T::Array[T.untyped])
+        @rule_priority = T.let([], T::Array[Symbol])
       end
 
       sig { params(conf: T.untyped).void }
@@ -147,6 +165,7 @@ module Fluent
 
       private
 
+      sig { void }
       def validate_configuration
         # Check that at least one rule source is specified
         if @rules_file.nil? && @rules_dir.nil? && @rule_configs.empty?
@@ -183,6 +202,7 @@ module Fluent
         validate_rules_sections
       end
 
+      sig { void }
       def validate_rules_sections
         @rule_configs.each_with_index do |rule_config, index|
           # Validate path is specified and not empty
@@ -196,6 +216,7 @@ module Fluent
         end
       end
 
+      sig { void }
       def initialize_components
         log.info 'Initializing logcheck components...'
 
@@ -221,6 +242,7 @@ module Fluent
         log.debug "RuleEngine initialized with #{@rule_sets.size} rule sets" if @debug_mode
       end
 
+      sig { params(rule_loader: T.untyped).void }
       def load_simple_rule_sources(rule_loader)
         # Load from rules_file
         if @rules_file
@@ -258,6 +280,7 @@ module Fluent
         end
       end
 
+      sig { params(rule_loader: T.untyped).void }
       def load_advanced_rule_sources(rule_loader)
         @rule_configs.each_with_index do |rule_config, index|
           path = rule_config.path
@@ -290,15 +313,18 @@ module Fluent
         end
       end
 
+      sig { params(record: T::Hash[String, T.untyped]).returns(T.nilable(String)) }
       def extract_match_text(record)
         @match_accessor.call(record)&.to_s
       end
 
+      sig { params(text: String).returns(T.untyped) }
       def make_filter_decision(text)
         # Use RuleEngine to make filtering decision
         @rule_engine.filter(text)
       end
 
+      sig { params(record: T::Hash[String, T.untyped], decision: T.untyped).returns(T.nilable(T::Hash[String, T.untyped])) }
       def apply_decision(record, decision)
         case decision.decision
         when Logcheck::FilterDecision::IGNORE
@@ -343,6 +369,7 @@ module Fluent
         end
       end
 
+      sig { void }
       def log_rule_summary
         log.info '=== Rule Summary ==='
         @rule_sets.each do |source, rule_set|
@@ -355,14 +382,16 @@ module Fluent
         log.info '==================='
       end
 
+      sig { void }
       def log_periodic_statistics
         return unless @log_statistics
-        return unless Time.now - @last_stats_log >= @statistics_interval
+        return unless Time.now - T.must(@last_stats_log) >= @statistics_interval
 
         log_current_statistics
         @last_stats_log = Time.now
       end
 
+      sig { void }
       def log_current_statistics
         uptime = Time.now - @statistics[:start_time]
         rate = @statistics[:processed] / uptime if uptime.positive?
@@ -377,6 +406,7 @@ module Fluent
         log.info '=========================='
       end
 
+      sig { void }
       def log_final_statistics
         return unless @log_statistics || @debug_mode
 
@@ -389,6 +419,7 @@ module Fluent
         log.info "Rule engine statistics: #{engine_stats}"
       end
 
+      sig { returns(Integer) }
       def total_rules
         @rule_sets.values.sum(&:size)
       end

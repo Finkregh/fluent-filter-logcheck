@@ -16,9 +16,9 @@ module Fluent
         class FileNotFoundError < StandardError; end
         class ParseError < StandardError; end
 
-        sig { params(logger: T.nilable(T.untyped)).void }
+        sig { params(logger: T.untyped).void }
         def initialize(logger: nil)
-          @logger = T.let(logger, T.nilable(T.untyped))
+          @logger = T.let(logger, T.untyped)
         end
 
         # Load rules from a single file
@@ -51,7 +51,7 @@ module Fluent
 
             # Try to create a rule from the line
             begin
-              rule = Rule.new(cleaned_line, T.must(rule_type), file_path, line_number)
+              rule = Rule.new(cleaned_line, rule_type, file_path, line_number)
               # Test pattern compilation immediately to catch invalid regex
               rule.pattern
               rules << rule
@@ -62,7 +62,7 @@ module Fluent
           end
 
           log_info "Loaded #{rules.size} rules from #{file_path}"
-          rule_set = RuleSet.new(T.must(rule_type), file_path)
+          rule_set = RuleSet.new(rule_type, file_path)
           rules.each { |rule| rule_set.add_rule(rule) }
           rule_set
         rescue Encoding::InvalidByteSequenceError, Encoding::UndefinedConversionError => e

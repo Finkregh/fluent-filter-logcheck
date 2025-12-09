@@ -18,7 +18,7 @@ module Fluent
         sig { returns(Symbol) }
         attr_reader :decision
 
-        sig { returns(T.nilable(T.untyped)) }
+        sig { returns(T.untyped) }
         attr_reader :rule
 
         sig { returns(T.nilable(Symbol)) }
@@ -31,7 +31,7 @@ module Fluent
         # @param decision [Symbol] The decision type (:ignore, :alert, :pass)
         # @param rule [Rule, nil] The rule that matched (if any)
         # @param message [String] The original log message
-        sig { params(decision: Symbol, rule: T.nilable(T.untyped), message: String).void }
+        sig { params(decision: Symbol, rule: T.untyped, message: String).void }
         def initialize(decision, rule, message)
           @decision = decision
           @rule = rule
@@ -73,9 +73,9 @@ module Fluent
         def description
           case @decision
           when IGNORE
-            "Message ignored by #{@rule_type} rule: #{T.must(@rule).raw_pattern}"
+            "Message ignored by #{@rule_type} rule: #{@rule.raw_pattern}"
           when ALERT
-            "Alert triggered by #{@rule_type} rule: #{T.must(@rule).raw_pattern}"
+            "Alert triggered by #{@rule_type} rule: #{@rule.raw_pattern}"
           when PASS
             'Message passed through (no matching rules)'
           else

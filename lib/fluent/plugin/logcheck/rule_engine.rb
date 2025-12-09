@@ -18,9 +18,9 @@ module Fluent
           ignore: 1 # Lowest precedence - ignore rules
         }.freeze, T::Hash[Symbol, Integer])
 
-        sig { params(logger: T.nilable(T.untyped)).void }
+        sig { params(logger: T.untyped).void }
         def initialize(logger: nil)
-          @logger = T.let(logger, T.nilable(T.untyped))
+          @logger = T.let(logger, T.untyped)
           @rule_sets = T.let([], T::Array[T.untyped])
           @stats = T.let({
                            total_messages: 0,
@@ -126,7 +126,7 @@ module Fluent
 
             matching_rules << matched_rule
             rule_matches = T.cast(@stats[:rule_matches], T::Hash[Symbol, Integer])
-            rule_matches[matched_rule.type] += 1
+            rule_matches[matched_rule.type] = T.must(rule_matches[matched_rule.type]) + 1
           end
 
           matching_rules
@@ -140,7 +140,7 @@ module Fluent
         def apply_rule_precedence(matching_rules, message)
           # Sort rules by precedence (highest first)
           sorted_rules = matching_rules.sort_by { |rule| -(RULE_PRECEDENCE[rule.type] || 0) }
-          highest_precedence_rule = T.must(sorted_rules.first)
+          highest_precedence_rule = sorted_rules.first
 
           case highest_precedence_rule.type
           when :cracking, :violations

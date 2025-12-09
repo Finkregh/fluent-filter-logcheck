@@ -60,6 +60,11 @@ task :coverage do
   Rake::Task[:test].invoke
 end
 
+desc 'Run Sorbet type checker'
+task :sorbet do
+  sh 'bundle exec srb tc'
+end
+
 desc 'Clean up temporary files'
 task :clean do
   sh 'rm -rf coverage/'

@@ -41,6 +41,7 @@ module Fluent
           @source_file = source_file
           @line_number = line_number
           @compiled_pattern = T.let(nil, T.nilable(Regexp))
+          @pattern = T.let(nil, T.nilable(Regexp))
         end
 
         # Test if rule matches given text
@@ -130,7 +131,7 @@ module Fluent
         # @return [Array<Rule>] All matching rules
         sig { params(text: String).returns(T::Array[Rule]) }
         def match_all(text)
-          @rules.grep { |rule| rule.match?(text) }
+          @rules.select { |rule| rule.match?(text) }
         end
 
         # Get rule count

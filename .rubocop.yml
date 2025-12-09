@@ -1,0 +1,79 @@
+# RuboCop configuration for fluent-plugin-logcheck
+
+plugins:
+  - rubocop-rake
+  - rubocop-performance
+  - rubocop-sorbet
+  - rubocop-packaging
+
+AllCops:
+  NewCops: enable
+  TargetRubyVersion: 2.4
+  Exclude:
+    - "knowlege/**/*"
+    - "vendor/**/*"
+    - "coverage/**/*"
+    - "pkg/**/*"
+    - "tmp/**/*"
+
+# Gemspec cops
+Gemspec/AddRuntimeDependency:
+  Enabled: true
+Gemspec/AttributeAssignment:
+  Enabled: true
+Gemspec/DeprecatedAttributeAssignment:
+  Enabled: true
+Gemspec/DevelopmentDependencies:
+  Enabled: true
+Gemspec/RequireMFA:
+  Enabled: false # Not required for this project
+
+#
+# Policy: Focus on Security & Performance over cosmetic complexity metrics
+# (Following Fluentd's approach - disable metrics that don't affect functionality)
+#
+
+# Metrics cops - Disabled to allow complex business logic and comprehensive tests
+# Complex methods and classes are acceptable when they implement well-defined functionality
+Metrics:
+  Enabled: false
+
+# Layout cops - Disabled for long regex patterns and detailed error messages
+# Line length violations are often unavoidable in log processing patterns
+Layout/LineLength:
+  Enabled: false
+
+# Style cops
+Style/Documentation:
+  Enabled: false
+Style/FrozenStringLiteralComment:
+  Enabled: true
+Style/StringLiterals:
+  EnforcedStyle: single_quotes
+Style/PercentLiteralDelimiters:
+  PreferredDelimiters:
+    "%": "()"
+    "%i": "()"
+    "%I": "()"
+    "%q": "()"
+    "%Q": "()"
+    "%r": "{}"
+    "%s": "()"
+    "%w": "()"
+    "%W": "()"
+    "%x": "()"
+
+# Lint cops
+Lint/AmbiguousBlockAssociation:
+  Exclude:
+    - "test/**/*"
+
+# Duplicate branch detection disabled for defensive programming patterns
+# Sometimes duplicate branches are intentional for clarity and maintainability
+Lint/DuplicateBranch:
+  Enabled: false
+
+# Test-specific exclusions
+#Layout/TrailingWhitespace:
+#  Exclude:
+#    - "test/**/*"
