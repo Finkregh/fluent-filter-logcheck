@@ -13,13 +13,13 @@ class RuleTypesTest < Test::Unit::TestCase
 
   def test_all_types_array
     # Verify ALL_TYPES contains all rule types
-    expected_types = [:ignore, :cracking, :violations]
+    expected_types = %i(ignore cracking violations)
     assert_equal expected_types, Fluent::Plugin::Logcheck::RuleTypes::ALL_TYPES
   end
 
   def test_default_priority
     # Verify default priority order (security types first)
-    expected_priority = [:cracking, :violations, :ignore]
+    expected_priority = %i(cracking violations ignore)
     assert_equal expected_priority, Fluent::Plugin::Logcheck::RuleTypes::DEFAULT_PRIORITY
   end
 

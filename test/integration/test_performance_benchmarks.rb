@@ -21,48 +21,48 @@ class PerformanceBenchmarksTest < Test::Unit::TestCase
 
   sub_test_case 'rule loading performance' do
     test 'loads large rule sets efficiently' do
-      config = %[
+      config = %(
         rules_dir #{@large_rules_dir}
         recursive_scan true
         log_rule_errors false
-      ]
+      )
       
       loading_time = Benchmark.realtime do
         @driver = create_driver(config)
       end
       
       # Should load 500+ rules within reasonable time
-      assert_operator loading_time, :<, 2.0, "Rule loading should complete within 2 seconds"
+      assert_operator loading_time, :<, 2.0, 'Rule loading should complete within 2 seconds'
       
       # Verify rules were actually loaded
       total_rules = @driver.instance.instance_variable_get(:@rule_engine).total_rule_count
-      assert_operator total_rules, :>, 300, "Should load more than 300 rules"
+      assert_operator total_rules, :>, 300, 'Should load more than 300 rules'
     end
 
     test 'handles deep directory structures efficiently' do
-      config = %[
+      config = %(
         rules_dir #{@deep_dir_structure}
         recursive_scan true
         log_rule_errors false
-      ]
+      )
       
       loading_time = Benchmark.realtime do
         @driver = create_driver(config)
       end
       
       # Should handle deep recursion efficiently
-      assert_operator loading_time, :<, 1.0, "Deep directory scanning should complete within 1 second"
+      assert_operator loading_time, :<, 1.0, 'Deep directory scanning should complete within 1 second'
     end
   end
 
   sub_test_case 'message processing performance' do
     test 'processes high volume of messages efficiently' do
-      config = %[
+      config = %(
         rules_dir #{@mixed_rules_dir}
         recursive_scan true
         mark_matches true
         log_rule_errors false
-      ]
+      )
       
       d = create_driver(config)
       
@@ -78,22 +78,22 @@ class PerformanceBenchmarksTest < Test::Unit::TestCase
       end
       
       # Should process 1000 messages within reasonable time
-      assert_operator processing_time, :<, 1.0, "Should process 1000 messages within 1 second"
+      assert_operator processing_time, :<, 1.0, 'Should process 1000 messages within 1 second'
       
       # Verify processing results
       filtered_records = d.filtered_records
-      assert_operator filtered_records.size, :>, 0, "Should have some filtered records"
+      assert_operator filtered_records.size, :>, 0, 'Should have some filtered records'
       
       # Calculate throughput
       throughput = messages.size / processing_time
-      assert_operator throughput, :>, 500, "Should achieve >500 messages/second throughput"
+      assert_operator throughput, :>, 500, 'Should achieve >500 messages/second throughput'
     end
 
     test 'maintains performance with complex regex patterns' do
-      config = %[
+      config = %(
         rules_file #{@complex_patterns_file}
         log_rule_errors false
-      ]
+      )
       
       d = create_driver(config)
       
@@ -103,7 +103,7 @@ class PerformanceBenchmarksTest < Test::Unit::TestCase
         'Dec  8 20:15:32 hostname sshd[1234]: Failed password for user from 192.168.1.100 port 22 ssh2',
         'Dec  8 20:15:32 hostname kernel: [12345.678901] USB disconnect, address 1',
         'Dec  8 20:15:32 hostname postfix/smtpd[5678]: connect from unknown[192.168.1.200]'
-      ] * 250  # 1000 messages total
+      ] * 250 # 1000 messages total
       
       processing_time = Benchmark.realtime do
         d.run(default_tag: 'perf.complex') do
@@ -114,17 +114,17 @@ class PerformanceBenchmarksTest < Test::Unit::TestCase
       end
       
       # Should handle complex patterns efficiently
-      assert_operator processing_time, :<, 2.0, "Complex pattern processing should complete within 2 seconds"
+      assert_operator processing_time, :<, 2.0, 'Complex pattern processing should complete within 2 seconds'
     end
   end
 
   sub_test_case 'memory usage optimization' do
     test 'uses lazy regex compilation efficiently' do
-      config = %[
+      config = %(
         rules_dir #{@large_rules_dir}
         recursive_scan true
         log_rule_errors false
-      ]
+      )
       
       d = create_driver(config)
       
@@ -140,15 +140,15 @@ class PerformanceBenchmarksTest < Test::Unit::TestCase
       
       # Verify that not all patterns are compiled (lazy compilation)
       # This is a proxy test - in real implementation, we'd check internal state
-      assert_operator rule_engine.total_rule_count, :>, 0, "Should have rules loaded"
+      assert_operator rule_engine.total_rule_count, :>, 0, 'Should have rules loaded'
     end
 
     test 'handles rule caching efficiently' do
-      config = %[
+      config = %(
         rules_file #{@valid_rules_file}
         cache_size 100
         log_rule_errors false
-      ]
+      )
       
       d = create_driver(config)
       
@@ -164,7 +164,7 @@ class PerformanceBenchmarksTest < Test::Unit::TestCase
       end
       
       # Repeated processing should be fast due to caching optimizations
-      assert_operator processing_time, :<, 0.5, "Repeated message processing should be very fast"
+      assert_operator processing_time, :<, 0.5, 'Repeated message processing should be very fast'
     end
   end
 
@@ -176,10 +176,10 @@ class PerformanceBenchmarksTest < Test::Unit::TestCase
       
       rule_counts.each do |count|
         rules_file = create_rules_file_with_count(count)
-        config = %[
+        config = %(
           rules_file #{rules_file}
           log_rule_errors false
-        ]
+        )
         
         d = create_driver(config)
         
@@ -205,15 +205,15 @@ class PerformanceBenchmarksTest < Test::Unit::TestCase
       # Scaling factor should be reasonable (less than 50x for 50x more rules)
       # This allows for some non-linear scaling due to regex compilation overhead
       scaling_factor = max_time / min_time
-      assert_operator scaling_factor, :<, 50, "Performance should scale reasonably with rule count"
+      assert_operator scaling_factor, :<, 50, 'Performance should scale reasonably with rule count'
     end
 
     test 'handles concurrent processing efficiently' do
-      config = %[
+      config = %(
         rules_dir #{@mixed_rules_dir}
         recursive_scan true
         log_rule_errors false
-      ]
+      )
       
       d = create_driver(config)
       
@@ -230,10 +230,10 @@ class PerformanceBenchmarksTest < Test::Unit::TestCase
       end
       
       # Should handle rapid message processing efficiently
-      assert_operator processing_time, :<, 1.0, "Concurrent-style processing should be efficient"
+      assert_operator processing_time, :<, 1.0, 'Concurrent-style processing should be efficient'
       
       # Verify all messages were processed
-      assert_operator d.filtered_records.size, :>, 0, "Should process messages successfully"
+      assert_operator d.filtered_records.size, :>, 0, 'Should process messages successfully'
     end
   end
 

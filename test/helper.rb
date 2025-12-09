@@ -21,9 +21,9 @@ if ENV['COVERAGE']
     if ENV['CI']
       # In CI, generate both HTML and Cobertura XML
       formatter SimpleCov::Formatter::MultiFormatter.new([
-        SimpleCov::Formatter::HTMLFormatter,
-        SimpleCov::Formatter::CoberturaFormatter
-      ])
+                                                           SimpleCov::Formatter::HTMLFormatter,
+                                                           SimpleCov::Formatter::CoberturaFormatter
+                                                         ])
     else
       # Locally, just generate HTML to avoid XML parsing issues
       formatter SimpleCov::Formatter::HTMLFormatter

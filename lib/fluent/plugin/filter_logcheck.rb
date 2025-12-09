@@ -17,7 +17,7 @@ module Fluent
 
       # Configuration parameters
       config_param :match_field, :string, default: 'message'
-      config_param :default_action, :enum, list: [:keep, :drop], default: :keep
+      config_param :default_action, :enum, list: %i(keep drop), default: :keep
       config_param :mark_matches, :bool, default: false
       config_param :mark_field_prefix, :string, default: 'logcheck_'
       config_param :cache_size, :integer, default: 1000
@@ -36,12 +36,12 @@ module Fluent
       # Advanced rule configuration
       config_section :rules, param_name: :rule_configs, multi: true do
         config_param :path, :string
-        config_param :type, :enum, list: [:ignore, :cracking, :violations], default: nil
+        config_param :type, :enum, list: %i(ignore cracking violations), default: nil
         config_param :recursive, :bool, default: true
       end
 
       # Rule priority configuration
-      config_param :rule_priority, :array, default: [:cracking, :violations, :ignore]
+      config_param :rule_priority, :array, default: %i(cracking violations ignore)
 
       def initialize
         super
@@ -77,26 +77,26 @@ module Fluent
         super
         @statistics[:start_time] = Time.now
         @last_stats_log = Time.now
-        
+
         log.info "Logcheck filter started with #{total_rules} rules"
         log.info "Configuration: match_field=#{@match_field}, default_action=#{@default_action}, mark_matches=#{@mark_matches}"
         log.info "Debug mode: #{@debug_mode ? 'enabled' : 'disabled'}"
         log.info "Statistics logging: #{@log_statistics ? "enabled (interval: #{@statistics_interval}s)" : 'disabled'}"
-        
-        if @debug_mode
-          log_rule_summary
-        end
+
+        return unless @debug_mode
+
+        log_rule_summary
       end
 
       def shutdown
         super
         log_final_statistics
-        log.info "Logcheck filter stopped"
+        log.info 'Logcheck filter stopped'
       end
 
-      def filter(tag, time, record)
+      def filter(_tag, _time, record)
         @statistics[:processed] += 1
-        
+
         # Extract text to match
         text = extract_match_text(record)
         if text.nil? || text.empty?
@@ -110,12 +110,12 @@ module Fluent
 
         # Make filtering decision
         decision = make_filter_decision(text)
-        
+
         log.debug "Filter decision: #{decision.decision} (#{decision.description})" if @debug_mode
 
         # Apply decision
         result = apply_decision(record, decision)
-        
+
         # Update statistics
         case decision.decision
         when Logcheck::FilterDecision::IGNORE
@@ -125,7 +125,7 @@ module Fluent
         when Logcheck::FilterDecision::PASS
           @statistics[:passed] += 1
         end
-        
+
         log_periodic_statistics
         result
       rescue StandardError => e
@@ -141,32 +141,29 @@ module Fluent
       def validate_configuration
         # Check that at least one rule source is specified
         if @rules_file.nil? && @rules_dir.nil? && @rule_configs.empty?
-          raise Fluent::ConfigError, "At least one rule source must be specified (rules_file, rules_dir, or rules section)"
+          raise Fluent::ConfigError,
+                'At least one rule source must be specified (rules_file, rules_dir, or rules section)'
         end
 
         # Validate match_field is not empty
-        if @match_field.nil? || @match_field.strip.empty?
-          raise Fluent::ConfigError, "match_field cannot be empty"
-        end
+        raise Fluent::ConfigError, 'match_field cannot be empty' if @match_field.nil? || @match_field.strip.empty?
 
         # Validate mark_field_prefix when mark_matches is enabled
         if @mark_matches && (@mark_field_prefix.nil? || @mark_field_prefix.strip.empty?)
-          raise Fluent::ConfigError, "mark_field_prefix cannot be empty when mark_matches is true"
+          raise Fluent::ConfigError, 'mark_field_prefix cannot be empty when mark_matches is true'
         end
 
         # Convert rule priority to symbols and validate
         @rule_priority = @rule_priority.map(&:to_sym)
-        
+
         # Validate rule_priority is not empty
-        if @rule_priority.empty?
-          raise Fluent::ConfigError, "rule_priority cannot be empty"
-        end
-        
+        raise Fluent::ConfigError, 'rule_priority cannot be empty' if @rule_priority.empty?
+
         # Validate rule_priority contains unique values
         if @rule_priority.uniq.size != @rule_priority.size
-          raise Fluent::ConfigError, "rule_priority must contain unique values"
+          raise Fluent::ConfigError, 'rule_priority must contain unique values'
         end
-        
+
         # Validate rule_priority contains only valid types
         invalid_types = @rule_priority - Logcheck::RuleTypes::ALL_TYPES
         unless invalid_types.empty?
@@ -174,14 +171,10 @@ module Fluent
         end
 
         # Validate cache size
-        if @cache_size <= 0
-          raise Fluent::ConfigError, "cache_size must be positive"
-        end
+        raise Fluent::ConfigError, 'cache_size must be positive' if @cache_size <= 0
 
         # Validate max rules per file
-        if @max_rules_per_file <= 0
-          raise Fluent::ConfigError, "max_rules_per_file must be positive"
-        end
+        raise Fluent::ConfigError, 'max_rules_per_file must be positive' if @max_rules_per_file <= 0
 
         # Validate rules section configurations
         validate_rules_sections
@@ -193,38 +186,39 @@ module Fluent
           if rule_config.path.nil? || rule_config.path.strip.empty?
             raise Fluent::ConfigError, "rules section #{index + 1}: path cannot be empty"
           end
-          
+
           # Validate type if specified
           if rule_config.type && !Logcheck::RuleTypes::ALL_TYPES.include?(rule_config.type)
-            raise Fluent::ConfigError, "rules section #{index + 1}: invalid type '#{rule_config.type}'. Valid types: #{Logcheck::RuleTypes::ALL_TYPES.join(', ')}"
+            raise Fluent::ConfigError,
+                  "rules section #{index + 1}: invalid type '#{rule_config.type}'. Valid types: #{Logcheck::RuleTypes::ALL_TYPES.join(', ')}"
           end
         end
       end
 
       def initialize_components
-        log.info "Initializing logcheck components..."
-        
+        log.info 'Initializing logcheck components...'
+
         # Initialize rule loader
         rule_loader = Logcheck::RuleLoader.new(logger: log)
         @rule_sets = {}
-        
+
         # Load rules from simple file/directory sources
         load_simple_rule_sources(rule_loader)
-        
+
         # Load rules from advanced rule configurations
         load_advanced_rule_sources(rule_loader)
-        
+
         total_rule_count = total_rules
         log.info "Loaded #{total_rule_count} rules from #{@rule_sets.size} rule sets"
-        
+
         if @debug_mode && total_rule_count == 0
-          log.warn "No rules loaded! Check your configuration and rule file paths."
+          log.warn 'No rules loaded! Check your configuration and rule file paths.'
         end
-        
+
         # Initialize RuleEngine with loaded rule sets
         @rule_engine = Logcheck::RuleEngine.new(logger: log)
         @rule_engine.add_rule_sets(@rule_sets.values)
-        
+
         log.debug "RuleEngine initialized with #{@rule_sets.size} rule sets" if @debug_mode
       end
 
@@ -245,23 +239,23 @@ module Fluent
         end
 
         # Load from rules_dir
-        if @rules_dir
-          log.debug "Loading rules from directory: #{@rules_dir} (recursive: #{@recursive_scan})" if @debug_mode
-          begin
-            rule_sets = rule_loader.load_directory(@rules_dir, nil,
+        return unless @rules_dir
+
+        log.debug "Loading rules from directory: #{@rules_dir} (recursive: #{@recursive_scan})" if @debug_mode
+        begin
+          rule_sets = rule_loader.load_directory(@rules_dir, nil,
                                                  recursive: @recursive_scan,
                                                  max_rules: @max_rules_per_file)
-            rule_sets.each do |rule_set|
-              @rule_sets[rule_set.source_path] = rule_set
-              log.debug "Loaded #{rule_set.size} rules from: #{rule_set.source_path}" if @debug_mode
-            end
-            log.info "Loaded #{rule_sets.sum(&:size)} rules from #{rule_sets.size} files in directory: #{@rules_dir}"
-          rescue Logcheck::RuleLoader::FileNotFoundError => e
-            log.warn "Rules directory not found: #{e.message}"
-          rescue StandardError => e
-            log.error "Error loading rules directory #{@rules_dir}: #{e.message}"
-            log.error_backtrace e.backtrace if @debug_mode
+          rule_sets.each do |rule_set|
+            @rule_sets[rule_set.source_path] = rule_set
+            log.debug "Loaded #{rule_set.size} rules from: #{rule_set.source_path}" if @debug_mode
           end
+          log.info "Loaded #{rule_sets.sum(&:size)} rules from #{rule_sets.size} files in directory: #{@rules_dir}"
+        rescue Logcheck::RuleLoader::FileNotFoundError => e
+          log.warn "Rules directory not found: #{e.message}"
+        rescue StandardError => e
+          log.error "Error loading rules directory #{@rules_dir}: #{e.message}"
+          log.error_backtrace e.backtrace if @debug_mode
         end
       end
 
@@ -271,7 +265,9 @@ module Fluent
           type = rule_config.type
           recursive = rule_config.recursive
 
-          log.debug "Loading advanced rule source #{index + 1}: #{path} (type: #{type || 'auto'}, recursive: #{recursive})" if @debug_mode
+          if @debug_mode
+            log.debug "Loading advanced rule source #{index + 1}: #{path} (type: #{type || 'auto'}, recursive: #{recursive})"
+          end
 
           begin
             if File.file?(path)
@@ -280,11 +276,13 @@ module Fluent
               log.info "Loaded #{rule_set.size} rules from file: #{path} (type: #{rule_set.type})"
             elsif File.directory?(path)
               rule_sets = rule_loader.load_directory(path, type,
-                                                   recursive: recursive,
-                                                   max_rules: @max_rules_per_file)
+                                                     recursive: recursive,
+                                                     max_rules: @max_rules_per_file)
               rule_sets.each do |rule_set|
                 @rule_sets[rule_set.source_path] = rule_set
-                log.debug "Loaded #{rule_set.size} rules from: #{rule_set.source_path} (type: #{rule_set.type})" if @debug_mode
+                if @debug_mode
+                  log.debug "Loaded #{rule_set.size} rules from: #{rule_set.source_path} (type: #{rule_set.type})"
+                end
               end
               log.info "Loaded #{rule_sets.sum(&:size)} rules from #{rule_sets.size} files in directory: #{path}"
             else
@@ -334,9 +332,7 @@ module Fluent
           record
         when Logcheck::FilterDecision::PASS
           # Keep record unchanged
-          if (@log_rule_errors || @debug_mode) && @debug_mode
-            log.debug "Passing message: #{decision.description}"
-          end
+          log.debug "Passing message: #{decision.description}" if (@log_rule_errors || @debug_mode) && @debug_mode
           record
         else
           # Unknown decision - apply default action
@@ -353,15 +349,15 @@ module Fluent
       end
 
       def log_rule_summary
-        log.info "=== Rule Summary ==="
+        log.info '=== Rule Summary ==='
         @rule_sets.each do |source, rule_set|
           log.info "  #{source}: #{rule_set.size} rules (type: #{rule_set.type})"
         end
-        
+
         rule_counts = @rule_sets.values.group_by(&:type).transform_values { |sets| sets.sum(&:size) }
         log.info "Rule counts by type: #{rule_counts}"
         log.info "Rule priority order: #{@rule_priority}"
-        log.info "==================="
+        log.info '==================='
       end
 
       def log_periodic_statistics
@@ -376,26 +372,26 @@ module Fluent
         uptime = Time.now - @statistics[:start_time]
         rate = @statistics[:processed] / uptime if uptime > 0
 
-        log.info "=== Logcheck Statistics ==="
+        log.info '=== Logcheck Statistics ==='
         log.info "  Uptime: #{uptime.round(1)}s"
         log.info "  Processed: #{@statistics[:processed]} (#{rate&.round(2) || 0}/s)"
         log.info "  Ignored: #{@statistics[:ignored]}"
         log.info "  Alerted: #{@statistics[:alerted]}"
         log.info "  Passed: #{@statistics[:passed]}"
         log.info "  Errors: #{@statistics[:errors]}"
-        log.info "=========================="
+        log.info '=========================='
       end
 
       def log_final_statistics
         return unless @log_statistics || @debug_mode
 
-        log.info "=== Final Logcheck Statistics ==="
+        log.info '=== Final Logcheck Statistics ==='
         log_current_statistics
-        
-        if @rule_engine
-          engine_stats = @rule_engine.statistics
-          log.info "Rule engine statistics: #{engine_stats}"
-        end
+
+        return unless @rule_engine
+
+        engine_stats = @rule_engine.statistics
+        log.info "Rule engine statistics: #{engine_stats}"
       end
 
       def total_rules

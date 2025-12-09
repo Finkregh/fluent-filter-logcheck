@@ -21,10 +21,10 @@ class ErrorHandlingTest < Test::Unit::TestCase
   sub_test_case 'rule loading error handling' do
     test 'handles missing rule files gracefully' do
       non_existent_file = File.join(@temp_dir, 'missing.rules')
-      config = %[
+      config = %(
         rules_file #{non_existent_file}
         log_rule_errors true
-      ]
+      )
       
       d = create_driver(config)
       
@@ -41,10 +41,10 @@ class ErrorHandlingTest < Test::Unit::TestCase
 
     test 'handles missing rule directories gracefully' do
       non_existent_dir = File.join(@temp_dir, 'missing_dir')
-      config = %[
+      config = %(
         rules_dir #{non_existent_dir}
         log_rule_errors true
-      ]
+      )
       
       d = create_driver(config)
       
@@ -63,11 +63,11 @@ class ErrorHandlingTest < Test::Unit::TestCase
       malformed_file = File.join(@temp_dir, 'malformed.rules')
       File.write(malformed_file, "[invalid_regex\n(unclosed_group\n")
       
-      config = %[
+      config = %(
         rules_file #{malformed_file}
         ignore_parse_errors true
         log_rule_errors true
-      ]
+      )
       
       d = create_driver(config)
       
@@ -84,16 +84,16 @@ class ErrorHandlingTest < Test::Unit::TestCase
 
     test 'handles file permission errors gracefully' do
       restricted_file = File.join(@temp_dir, 'restricted.rules')
-      File.write(restricted_file, "test.*pattern")
+      File.write(restricted_file, 'test.*pattern')
       
       begin
-        File.chmod(0000, restricted_file)
+        File.chmod(0o000, restricted_file)
         
-        config = %[
+        config = %(
           rules_file #{restricted_file}
           ignore_parse_errors true
           log_rule_errors true
-        ]
+        )
         
         d = create_driver(config)
         
@@ -107,17 +107,21 @@ class ErrorHandlingTest < Test::Unit::TestCase
         # Message should pass through since rules couldn't be loaded
         assert_equal 1, d.filtered_records.size
       ensure
-        File.chmod(0644, restricted_file) rescue nil
+        begin
+          File.chmod(0o644, restricted_file)
+        rescue StandardError
+          nil
+        end
       end
     end
   end
 
   sub_test_case 'record processing error handling' do
     test 'handles missing message field gracefully' do
-      config = %[
+      config = %(
         rules_file #{@valid_rules_file}
         match_field message
-      ]
+      )
       
       d = create_driver(config)
       
@@ -134,10 +138,10 @@ class ErrorHandlingTest < Test::Unit::TestCase
     end
 
     test 'handles nil message field gracefully' do
-      config = %[
+      config = %(
         rules_file #{@valid_rules_file}
         match_field message
-      ]
+      )
       
       d = create_driver(config)
       
@@ -154,10 +158,10 @@ class ErrorHandlingTest < Test::Unit::TestCase
     end
 
     test 'handles empty message field gracefully' do
-      config = %[
+      config = %(
         rules_file #{@valid_rules_file}
         match_field message
-      ]
+      )
       
       d = create_driver(config)
       
@@ -174,17 +178,17 @@ class ErrorHandlingTest < Test::Unit::TestCase
     end
 
     test 'handles non-string message field gracefully' do
-      config = %[
+      config = %(
         rules_file #{@valid_rules_file}
         match_field message
-      ]
+      )
       
       d = create_driver(config)
       
       # Record with numeric message field
       assert_nothing_raised do
         d.run(default_tag: 'test') do
-          d.feed(event_time, { 'message' => 12345, 'other_field' => 'value' })
+          d.feed(event_time, { 'message' => 12_345, 'other_field' => 'value' })
         end
       end
       
@@ -193,10 +197,10 @@ class ErrorHandlingTest < Test::Unit::TestCase
     end
 
     test 'handles nested field access errors gracefully' do
-      config = %[
+      config = %(
         rules_file #{@valid_rules_file}
         match_field nested.field.that.does.not.exist
-      ]
+      )
       
       d = create_driver(config)
       
@@ -214,16 +218,16 @@ class ErrorHandlingTest < Test::Unit::TestCase
 
   sub_test_case 'rule engine error handling' do
     test 'handles rule engine exceptions gracefully' do
-      config = %[
+      config = %(
         rules_file #{@valid_rules_file}
         log_rule_errors true
-      ]
+      )
       
       d = create_driver(config)
       
       # Mock rule engine to throw exception
-      d.instance.instance_variable_get(:@rule_engine).define_singleton_method(:filter) do |text|
-        raise StandardError, "Simulated rule engine error"
+      d.instance.instance_variable_get(:@rule_engine).define_singleton_method(:filter) do |_text|
+        raise StandardError, 'Simulated rule engine error'
       end
       
       # Should not raise, should return original record
@@ -239,11 +243,11 @@ class ErrorHandlingTest < Test::Unit::TestCase
     end
 
     test 'handles filter decision application errors gracefully' do
-      config = %[
+      config = %(
         rules_file #{@valid_rules_file}
         mark_matches true
         log_rule_errors true
-      ]
+      )
       
       d = create_driver(config)
       
@@ -251,7 +255,7 @@ class ErrorHandlingTest < Test::Unit::TestCase
       decision = Fluent::Plugin::Logcheck::FilterDecision.new(:unknown_decision, nil, 'test')
       
       # Mock make_filter_decision to return problematic decision
-      d.instance.define_singleton_method(:make_filter_decision) do |text|
+      d.instance.define_singleton_method(:make_filter_decision) do |_text|
         decision
       end
       
@@ -271,12 +275,12 @@ class ErrorHandlingTest < Test::Unit::TestCase
     test 'continues processing with partial rule loading failures' do
       # Create mixed scenario: some valid, some invalid rule sources
       valid_file = File.join(@temp_dir, 'valid.rules')
-      File.write(valid_file, "^valid.*pattern$")
+      File.write(valid_file, '^valid.*pattern$')
       
       invalid_file = File.join(@temp_dir, 'invalid.rules')
-      File.write(invalid_file, "[invalid_regex")
+      File.write(invalid_file, '[invalid_regex')
       
-      config = %[
+      config = %(
         <rules>
           path #{valid_file}
           type ignore
@@ -287,7 +291,7 @@ class ErrorHandlingTest < Test::Unit::TestCase
         </rules>
         ignore_parse_errors true
         log_rule_errors true
-      ]
+      )
       
       d = create_driver(config)
       
@@ -308,10 +312,10 @@ class ErrorHandlingTest < Test::Unit::TestCase
 
   sub_test_case 'logging and debugging' do
     test 'provides detailed error information when log_rule_errors is true' do
-      config = %[
+      config = %(
         rules_file #{@valid_rules_file}
         log_rule_errors true
-      ]
+      )
       
       d = create_driver(config)
       
@@ -327,10 +331,10 @@ class ErrorHandlingTest < Test::Unit::TestCase
     end
 
     test 'suppresses detailed logging when log_rule_errors is false' do
-      config = %[
+      config = %(
         rules_file #{@valid_rules_file}
         log_rule_errors false
-      ]
+      )
       
       d = create_driver(config)
       
@@ -355,13 +359,13 @@ class ErrorHandlingTest < Test::Unit::TestCase
   def create_test_files
     @valid_rules_file = File.join(@temp_dir, 'valid.rules')
     File.write(@valid_rules_file, [
-      "^test ignore pattern$",
-      "^another ignore pattern$"
+      '^test ignore pattern$',
+      '^another ignore pattern$'
     ].join("\n"))
     
     # Create a test directory structure
     ignore_dir = File.join(@temp_dir, 'ignore.d.server')
     FileUtils.mkdir_p(ignore_dir)
-    File.write(File.join(ignore_dir, 'test'), "^.*ignore.*$")
+    File.write(File.join(ignore_dir, 'test'), '^.*ignore.*$')
   end
 end

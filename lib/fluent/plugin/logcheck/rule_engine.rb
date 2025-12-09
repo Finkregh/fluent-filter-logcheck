@@ -42,7 +42,7 @@ module Fluent
         # Clear all rule sets
         def clear_rule_sets
           @rule_sets.clear
-          log_info "Cleared all rule sets"
+          log_info 'Cleared all rule sets'
         end
 
         # Get the number of loaded rule sets
@@ -62,10 +62,10 @@ module Fluent
         # @return [FilterDecision] The filtering decision
         def filter(message)
           @stats[:total_messages] += 1
-          
+
           # Find all matching rules across all rule sets
           matching_rules = find_matching_rules(message)
-          
+
           if matching_rules.empty?
             # No rules matched - pass the message through
             decision = FilterDecision.pass(message)
@@ -105,7 +105,7 @@ module Fluent
         # @return [Array<Rule>] Array of matching rules
         def find_matching_rules(message)
           matching_rules = []
-          
+
           @rule_sets.each do |rule_set|
             matched_rule = rule_set.match(message)
             if matched_rule
@@ -113,7 +113,7 @@ module Fluent
               @stats[:rule_matches][matched_rule.type] += 1
             end
           end
-          
+
           matching_rules
         end
 
@@ -125,7 +125,7 @@ module Fluent
           # Sort rules by precedence (highest first)
           sorted_rules = matching_rules.sort_by { |rule| -RULE_PRECEDENCE[rule.type] }
           highest_precedence_rule = sorted_rules.first
-          
+
           case highest_precedence_rule.type
           when :cracking, :violations
             # Security and violation rules trigger alerts

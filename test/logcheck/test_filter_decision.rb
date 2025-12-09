@@ -8,8 +8,8 @@ class FilterDecisionTest < Test::Unit::TestCase
   include Fluent::Test::Helpers
 
   def setup
-    @message = "Test log message"
-    @rule = Fluent::Plugin::Logcheck::Rule.new("test.*pattern", :ignore, "/test/file", 1)
+    @message = 'Test log message'
+    @rule = Fluent::Plugin::Logcheck::Rule.new('test.*pattern', :ignore, '/test/file', 1)
   end
 
   sub_test_case 'initialization' do
@@ -70,26 +70,26 @@ class FilterDecisionTest < Test::Unit::TestCase
   sub_test_case 'description method' do
     test 'returns correct description for ignore decision' do
       decision = Fluent::Plugin::Logcheck::FilterDecision.new(:ignore, @rule, @message)
-      expected = "Message ignored by ignore rule: test.*pattern"
+      expected = 'Message ignored by ignore rule: test.*pattern'
       assert_equal expected, decision.description
     end
 
     test 'returns correct description for alert decision' do
-      cracking_rule = Fluent::Plugin::Logcheck::Rule.new("attack.*pattern", :cracking, "/test/file", 1)
+      cracking_rule = Fluent::Plugin::Logcheck::Rule.new('attack.*pattern', :cracking, '/test/file', 1)
       decision = Fluent::Plugin::Logcheck::FilterDecision.new(:alert, cracking_rule, @message)
-      expected = "Alert triggered by cracking rule: attack.*pattern"
+      expected = 'Alert triggered by cracking rule: attack.*pattern'
       assert_equal expected, decision.description
     end
 
     test 'returns correct description for pass decision' do
       decision = Fluent::Plugin::Logcheck::FilterDecision.new(:pass, nil, @message)
-      expected = "Message passed through (no matching rules)"
+      expected = 'Message passed through (no matching rules)'
       assert_equal expected, decision.description
     end
 
     test 'returns unknown description for invalid decision' do
       decision = Fluent::Plugin::Logcheck::FilterDecision.new(:unknown, nil, @message)
-      expected = "Unknown decision: unknown"
+      expected = 'Unknown decision: unknown'
       assert_equal expected, decision.description
     end
   end
@@ -101,8 +101,8 @@ class FilterDecisionTest < Test::Unit::TestCase
       
       assert_equal :ignore, hash[:decision]
       assert_equal :ignore, hash[:rule_type]
-      assert_equal "test.*pattern", hash[:pattern]
-      assert_equal "/test/file", hash[:source]
+      assert_equal 'test.*pattern', hash[:pattern]
+      assert_equal '/test/file', hash[:source]
       assert_equal 1, hash[:line]
       assert_equal @message, hash[:message_preview]
     end
@@ -120,7 +120,7 @@ class FilterDecisionTest < Test::Unit::TestCase
     end
 
     test 'truncates long messages in preview' do
-      long_message = "a" * 150
+      long_message = 'a' * 150
       decision = Fluent::Plugin::Logcheck::FilterDecision.new(:pass, nil, long_message)
       hash = decision.to_h
       

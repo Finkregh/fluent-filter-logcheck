@@ -56,7 +56,7 @@ module Fluent
           when ALERT
             "Alert triggered by #{@rule_type} rule: #{@rule.raw_pattern}"
           when PASS
-            "Message passed through (no matching rules)"
+            'Message passed through (no matching rules)'
           else
             "Unknown decision: #{@decision}"
           end

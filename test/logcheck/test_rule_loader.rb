@@ -20,11 +20,11 @@ class RuleLoaderTest < Test::Unit::TestCase
   def test_load_single_file_with_ignore_rules
     # Test loading a single file with ignore rules
     rule_file = create_temp_file('ignore_rules', [
-      '# This is a comment',
-      '',
-      '^([[:alpha:]]{3} [ :[:digit:]]{11}|[0-9T:.+-]{32}) [._[:alnum:]-]+ systemd\[[0-9]+\]: Started .+\.$',
-      '^([[:alpha:]]{3} [ :[:digit:]]{11}|[0-9T:.+-]{32}) [._[:alnum:]-]+ systemd\[[0-9]+\]: Stopped .+\.$'
-    ])
+                                   '# This is a comment',
+                                   '',
+                                   '^([[:alpha:]]{3} [ :[:digit:]]{11}|[0-9T:.+-]{32}) [._[:alnum:]-]+ systemd\[[0-9]+\]: Started .+\.$',
+                                   '^([[:alpha:]]{3} [ :[:digit:]]{11}|[0-9T:.+-]{32}) [._[:alnum:]-]+ systemd\[[0-9]+\]: Stopped .+\.$'
+                                 ])
 
     rule_set = @rule_loader.load_file(rule_file, :ignore)
     
@@ -37,10 +37,10 @@ class RuleLoaderTest < Test::Unit::TestCase
   def test_load_single_file_with_cracking_rules
     # Test loading a single file with cracking rules
     rule_file = create_temp_file('cracking_rules', [
-      '# Security rules',
-      '^.* Failed password for .* from .* port .*',
-      '^.* Invalid user .* from .*'
-    ])
+                                   '# Security rules',
+                                   '^.* Failed password for .* from .* port .*',
+                                   '^.* Invalid user .* from .*'
+                                 ])
 
     rule_set = @rule_loader.load_file(rule_file, :cracking)
     
@@ -52,16 +52,16 @@ class RuleLoaderTest < Test::Unit::TestCase
   def test_load_file_with_empty_lines_and_comments
     # Test that empty lines and comments are properly filtered
     rule_file = create_temp_file('mixed_content', [
-      '# Header comment',
-      '',
-      '  # Indented comment',
-      'valid_rule_pattern',
-      '',
-      '   ',
-      '# Another comment',
-      'another_valid_pattern',
-      ''
-    ])
+                                   '# Header comment',
+                                   '',
+                                   '  # Indented comment',
+                                   'valid_rule_pattern',
+                                   '',
+                                   '   ',
+                                   '# Another comment',
+                                   'another_valid_pattern',
+                                   ''
+                                 ])
 
     rule_set = @rule_loader.load_file(rule_file, :ignore)
     
@@ -81,10 +81,10 @@ class RuleLoaderTest < Test::Unit::TestCase
   def test_load_file_with_invalid_regex
     # Test loading a file with invalid regex patterns
     rule_file = create_temp_file('invalid_regex', [
-      'valid_pattern',
-      '[invalid_regex',  # Missing closing bracket
-      'another_valid_pattern'
-    ])
+                                   'valid_pattern',
+                                   '[invalid_regex', # Missing closing bracket
+                                   'another_valid_pattern'
+                                 ])
 
     # Should not raise an error but should log warnings
     rule_set = @rule_loader.load_file(rule_file, :ignore)
@@ -99,9 +99,9 @@ class RuleLoaderTest < Test::Unit::TestCase
 
     rule_sets = @rule_loader.load_directory(@temp_dir, :ignore, recursive: true)
     
-    assert_equal 3, rule_sets.size  # 3 files created
+    assert_equal 3, rule_sets.size # 3 files created
     total_rules = rule_sets.sum(&:size)
-    assert_equal 6, total_rules  # 2 rules per file
+    assert_equal 6, total_rules # 2 rules per file
   end
 
   def test_load_directory_non_recursively
@@ -110,7 +110,7 @@ class RuleLoaderTest < Test::Unit::TestCase
 
     rule_sets = @rule_loader.load_directory(@temp_dir, :ignore, recursive: false)
     
-    assert_equal 1, rule_sets.size  # Only top-level file
+    assert_equal 1, rule_sets.size # Only top-level file
     assert_equal 2, rule_sets.first.size
   end
 
@@ -148,10 +148,10 @@ class RuleLoaderTest < Test::Unit::TestCase
 
   def test_load_file_with_encoding_issues
     # Test loading file with different encodings
-    rule_file = create_temp_file('encoding_test', [
-      'ascii_pattern',
-      'pattern_with_unicode_äöü'
-    ])
+    rule_file = create_temp_file('encoding_test', %w(
+                                   ascii_pattern
+                                   pattern_with_unicode_äöü
+                                 ))
 
     rule_set = @rule_loader.load_file(rule_file, :ignore)
     
@@ -172,7 +172,7 @@ class RuleLoaderTest < Test::Unit::TestCase
     FileUtils.mkdir_p(sub_dir)
     
     # Top-level file
-    create_temp_file('top_level', ['top_rule_1', 'top_rule_2'])
+    create_temp_file('top_level', %w(top_rule_1 top_rule_2))
     
     # Sub-directory files
     File.write(File.join(sub_dir, 'sub_file1'), "sub_rule_1\nsub_rule_2")

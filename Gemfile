@@ -10,4 +10,6 @@ group :development, :test do
   gem 'test-unit', '~> 3.0'
   gem 'rubocop', '~> 1.0'
   gem 'rubocop-performance', '~> 1.0'
+  gem 'rubocop-sorbet', '~> 0.11'
+  gem 'rubocop-packaging', '~> 0.6'
 end

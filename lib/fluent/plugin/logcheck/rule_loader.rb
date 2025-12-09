@@ -35,7 +35,7 @@ module Fluent
 
           File.foreach(file_path, encoding: 'UTF-8') do |line|
             line_number += 1
-            
+
             # Skip if we've reached the maximum rules limit
             break if max_rules && rules.size >= max_rules
 
@@ -123,12 +123,12 @@ module Fluent
         # @return [Boolean] True if file should be skipped
         def should_skip_file?(file_path)
           filename = File.basename(file_path)
-          
+
           # Skip hidden files, backup files, and common non-rule files
           return true if filename.start_with?('.')
           return true if filename.end_with?('~', '.bak', '.orig', '.tmp')
           return true if filename.match?(/\.(log|txt|md|yml|yaml|json|xml)$/i)
-          
+
           false
         end
 

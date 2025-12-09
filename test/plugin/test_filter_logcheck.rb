@@ -15,11 +15,11 @@ class FilterLogcheckTest < Test::Unit::TestCase
   end
 
   # Basic configuration for testing
-  CONFIG = %[
+  CONFIG = %(
     rules_file /tmp/test_rules
     match_field message
     default_action keep
-  ].freeze
+  )
 
   def test_plugin_registration
     # Test that the plugin is properly registered
@@ -28,11 +28,11 @@ class FilterLogcheckTest < Test::Unit::TestCase
 
   def test_basic_configuration
     # Test basic plugin configuration
-    config = %[
+    config = %(
       rules_file /tmp/test_rules
       match_field message
       default_action keep
-    ]
+    )
 
     d = create_driver(config)
     assert_not_nil d.instance
@@ -42,10 +42,10 @@ class FilterLogcheckTest < Test::Unit::TestCase
 
   def test_configuration_validation_no_rules
     # Test that configuration fails when no rule sources are specified
-    config = %[
+    config = %(
       match_field message
       default_action keep
-    ]
+    )
 
     assert_raise(Fluent::ConfigError) do
       create_driver(config)
@@ -54,10 +54,10 @@ class FilterLogcheckTest < Test::Unit::TestCase
 
   def test_configuration_validation_invalid_cache_size
     # Test that configuration fails with invalid cache size
-    config = %[
+    config = %(
       rules_file /tmp/test_rules
       cache_size 0
-    ]
+    )
 
     assert_raise(Fluent::ConfigError) do
       create_driver(config)
@@ -66,10 +66,10 @@ class FilterLogcheckTest < Test::Unit::TestCase
 
   def test_configuration_validation_invalid_rule_priority
     # Test that configuration fails with invalid rule priority
-    config = %[
+    config = %(
       rules_file /tmp/test_rules
       rule_priority ["invalid_type"]
-    ]
+    )
 
     assert_raise(Fluent::ConfigError) do
       create_driver(config)
@@ -78,7 +78,7 @@ class FilterLogcheckTest < Test::Unit::TestCase
 
   def test_advanced_configuration
     # Test advanced configuration with multiple rule sources
-    config = %[
+    config = %(
       <rules>
         path /etc/logcheck/ignore.d.server
         type ignore
@@ -93,21 +93,21 @@ class FilterLogcheckTest < Test::Unit::TestCase
       mark_matches true
       mark_field_prefix logcheck_
       rule_priority ["cracking", "violations", "ignore"]
-    ]
+    )
 
     d = create_driver(config)
     assert_not_nil d.instance
     assert_equal 'message', d.instance.match_field
     assert_true d.instance.mark_matches
     assert_equal 'logcheck_', d.instance.mark_field_prefix
-    assert_equal [:cracking, :violations, :ignore], d.instance.rule_priority
+    assert_equal %i(cracking violations ignore), d.instance.rule_priority
   end
 
   def test_default_values
     # Test that default configuration values are set correctly
-    config = %[
+    config = %(
       rules_file /tmp/test_rules
-    ]
+    )
 
     d = create_driver(config)
     instance = d.instance
@@ -121,15 +121,15 @@ class FilterLogcheckTest < Test::Unit::TestCase
     assert_true instance.ignore_parse_errors
     assert_true instance.log_rule_errors
     assert_equal 1000, instance.max_rules_per_file
-    assert_equal [:cracking, :violations, :ignore], instance.rule_priority
+    assert_equal %i(cracking violations ignore), instance.rule_priority
   end
 
   def test_filter_with_no_rules_loaded
     # Test filtering behavior when no rules are loaded (skeleton implementation)
-    config = %[
+    config = %(
       rules_file /tmp/nonexistent_rules
       default_action keep
-    ]
+    )
 
     d = create_driver(config)
 
@@ -145,11 +145,11 @@ class FilterLogcheckTest < Test::Unit::TestCase
 
   def test_filter_with_different_match_fields
     # Test filtering with different match fields
-    config = %[
+    config = %(
       rules_file /tmp/test_rules
       match_field log_text
       default_action keep
-    ]
+    )
 
     d = create_driver(config)
 
@@ -164,11 +164,11 @@ class FilterLogcheckTest < Test::Unit::TestCase
 
   def test_filter_with_missing_match_field
     # Test filtering when match field is missing from record
-    config = %[
+    config = %(
       rules_file /tmp/test_rules
       match_field message
       default_action keep
-    ]
+    )
 
     d = create_driver(config)
 
@@ -183,10 +183,10 @@ class FilterLogcheckTest < Test::Unit::TestCase
 
   def test_filter_error_handling
     # Test that filter handles errors gracefully
-    config = %[
+    config = %(
       rules_file /tmp/test_rules
       match_field message
-    ]
+    )
 
     d = create_driver(config)
 
@@ -201,10 +201,10 @@ class FilterLogcheckTest < Test::Unit::TestCase
 
   def test_configuration_with_rules_dir
     # Test configuration with rules_dir parameter
-    config = %[
+    config = %(
       rules_dir /etc/logcheck/ignore.d.server
       match_field message
-    ]
+    )
 
     d = create_driver(config)
     assert_equal '/etc/logcheck/ignore.d.server', d.instance.rules_dir
@@ -212,11 +212,11 @@ class FilterLogcheckTest < Test::Unit::TestCase
 
   def test_configuration_with_both_file_and_dir
     # Test configuration with both rules_file and rules_dir
-    config = %[
+    config = %(
       rules_file /tmp/test_rules
       rules_dir /etc/logcheck/ignore.d.server
       match_field message
-    ]
+    )
 
     # Should not raise an error - both can be specified
     d = create_driver(config)

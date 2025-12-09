@@ -76,7 +76,7 @@ class RuleTest < Test::Unit::TestCase
     
     assert_match(/Invalid regex pattern/, error.message)
     assert_match(/\[invalid/, error.message)
-    assert_match(/\/test\/file:42/, error.message)
+    assert_match(%r{/test/file:42}, error.message)
   end
 
   def test_match_with_invalid_pattern
@@ -114,7 +114,7 @@ class RuleTest < Test::Unit::TestCase
 
   def test_different_rule_types
     # Test rules with different types
-    types = [:ignore, :cracking, :violations]
+    types = %i(ignore cracking violations)
     
     types.each do |type|
       rule = Fluent::Plugin::Logcheck::Rule.new('test', type, '/test', 1)

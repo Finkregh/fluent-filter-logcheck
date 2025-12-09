@@ -26,12 +26,12 @@ class LoggingDebuggingTest < Test::Unit::TestCase
   end
 
   def create_driver(conf = {})
-    config = %[
+    config = %(
       rules_file #{File.join(@temp_dir, 'ignore.rules')}
       debug_mode true
       log_statistics true
       statistics_interval 1
-    ]
+    )
     
     conf.each do |key, value|
       config += "\n#{key} #{value}"
@@ -79,10 +79,10 @@ class LoggingDebuggingTest < Test::Unit::TestCase
 
     test 'logs error backtraces in debug mode' do
       # Create a driver with invalid configuration to trigger an error
-      config = %[
+      config = %(
         rules_file /nonexistent/file
         debug_mode true
-      ]
+      )
       
       d = Fluent::Test::Driver::Filter.new(Fluent::Plugin::LogcheckFilter).configure(config)
       
@@ -161,14 +161,14 @@ class LoggingDebuggingTest < Test::Unit::TestCase
   sub_test_case 'rule summary logging' do
     test 'logs rule summary in debug mode' do
       # Create driver with multiple rule sources
-      config = %[
+      config = %(
         rules_file #{File.join(@temp_dir, 'ignore.rules')}
         debug_mode true
         <rules>
           path #{File.join(@temp_dir, 'cracking.rules')}
           type cracking
         </rules>
-      ]
+      )
       
       d = Fluent::Test::Driver::Filter.new(Fluent::Plugin::LogcheckFilter).configure(config)
       
@@ -190,14 +190,14 @@ class LoggingDebuggingTest < Test::Unit::TestCase
   sub_test_case 'alert logging' do
     test 'logs alerts with detailed information' do
       # Create driver with cracking rules
-      config = %[
+      config = %(
         debug_mode true
         log_rule_errors true
         <rules>
           path #{File.join(@temp_dir, 'cracking.rules')}
           type cracking
         </rules>
-      ]
+      )
       
       d = Fluent::Test::Driver::Filter.new(Fluent::Plugin::LogcheckFilter).configure(config)
       
@@ -227,7 +227,9 @@ class LoggingDebuggingTest < Test::Unit::TestCase
       logs = d.logs
       
       # Check for configuration logs
-      assert logs.any? { |log| log.include?('Configuration: match_field=message, default_action=drop, mark_matches=true') }
+      assert logs.any? { |log|
+        log.include?('Configuration: match_field=message, default_action=drop, mark_matches=true')
+      }
       assert logs.any? { |log| log.include?('Debug mode: enabled') }
       assert logs.any? { |log| log.include?('Statistics logging: enabled') }
     end
@@ -238,8 +240,8 @@ class LoggingDebuggingTest < Test::Unit::TestCase
       d = create_driver
       
       # Mock the rule engine to raise an error
-      d.instance.instance_variable_get(:@rule_engine).define_singleton_method(:filter) do |text|
-        raise StandardError, "Test error"
+      d.instance.instance_variable_get(:@rule_engine).define_singleton_method(:filter) do |_text|
+        raise StandardError, 'Test error'
       end
       
       d.run(default_tag: 'test') do

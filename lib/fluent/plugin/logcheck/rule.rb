@@ -33,6 +33,7 @@ module Fluent
         # @return [Boolean] True if pattern matches
         def match?(text)
           return false if text.nil?
+
           pattern.match?(text.to_s)
         rescue StandardError => e
           raise PatternCompileError, "Failed to match pattern '#{@raw_pattern}': #{e.message}"
@@ -62,7 +63,8 @@ module Fluent
         def compile_pattern
           Regexp.new(@raw_pattern)
         rescue RegexpError => e
-          raise PatternCompileError, "Invalid regex pattern '#{@raw_pattern}' in #{@source_file}:#{@line_number}: #{e.message}"
+          raise PatternCompileError,
+                "Invalid regex pattern '#{@raw_pattern}' in #{@source_file}:#{@line_number}: #{e.message}"
         end
       end
 

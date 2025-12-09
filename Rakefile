@@ -22,7 +22,7 @@ task :brakeman do
 end
 
 desc 'Run all security checks'
-task :security => [:brakeman] do
+task security: [:brakeman] do
   sh 'bundle audit --update'
 end
 

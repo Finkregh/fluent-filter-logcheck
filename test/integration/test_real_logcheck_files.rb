@@ -147,13 +147,13 @@ class RealLogcheckFilesTest < Test::Unit::TestCase
     cracking_sets = rule_sets.select { |rs| rs.type == :cracking }
     violations_sets = rule_sets.select { |rs| rs.type == :violations }
 
-    assert_equal 2, ignore_sets.size, "Should find 2 ignore rule sets"
-    assert_equal 1, cracking_sets.size, "Should find 1 cracking rule set"
-    assert_equal 1, violations_sets.size, "Should find 1 violations rule set"
+    assert_equal 2, ignore_sets.size, 'Should find 2 ignore rule sets'
+    assert_equal 1, cracking_sets.size, 'Should find 1 cracking rule set'
+    assert_equal 1, violations_sets.size, 'Should find 1 violations rule set'
 
     # Verify total rule count
     total_rules = rule_sets.sum(&:size)
-    assert_operator total_rules, :>, 0, "Should load some rules"
+    assert_operator total_rules, :>, 0, 'Should load some rules'
   end
 
   def test_rule_type_detection_from_paths
@@ -196,7 +196,7 @@ class RealLogcheckFilesTest < Test::Unit::TestCase
     load_time = Time.now - start_time
 
     assert_equal 100, rule_set.size
-    assert_operator load_time, :<, 1.0, "Loading should complete within 1 second"
+    assert_operator load_time, :<, 1.0, 'Loading should complete within 1 second'
 
     # Test pattern matching performance
     test_message = 'Dec  8 20:15:32 hostname systemd[1]: Test pattern 50 some service started.'
@@ -206,7 +206,7 @@ class RealLogcheckFilesTest < Test::Unit::TestCase
     match_time = Time.now - start_time
 
     assert_not_nil matching_rule
-    assert_operator match_time, :<, 0.1, "Pattern matching should complete within 0.1 seconds"
+    assert_operator match_time, :<, 0.1, 'Pattern matching should complete within 0.1 seconds'
   end
 
   private

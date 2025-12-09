@@ -20,13 +20,13 @@ class EndToEndFilteringTest < Test::Unit::TestCase
 
   def test_complete_filtering_workflow
     # Create driver with real logcheck rules
-    config = %[
+    config = %(
       rules_dir #{@temp_dir}
       recursive_scan true
       mark_matches true
       mark_field_prefix logcheck_
       log_rule_errors true
-    ]
+    )
     
     d = create_driver(config)
     
@@ -64,38 +64,38 @@ class EndToEndFilteringTest < Test::Unit::TestCase
     filtered_records = d.filtered_records
     
     # Should have 3 records (ignore case drops the record)
-    assert_equal 3, filtered_records.size, "Expected 3 records after filtering"
+    assert_equal 3, filtered_records.size, 'Expected 3 records after filtering'
 
     # Check SSH alert record
     ssh_record = filtered_records.find { |r| r['message'].include?('Failed password') }
-    assert_not_nil ssh_record, "SSH alert record should be present"
-    assert_true ssh_record['logcheck_alert'], "SSH record should be marked as alert"
-    assert_equal 'cracking', ssh_record['logcheck_rule_type'], "SSH should be cracking type"
-    assert_not_nil ssh_record['logcheck_pattern'], "SSH record should have pattern"
+    assert_not_nil ssh_record, 'SSH alert record should be present'
+    assert_true ssh_record['logcheck_alert'], 'SSH record should be marked as alert'
+    assert_equal 'cracking', ssh_record['logcheck_rule_type'], 'SSH should be cracking type'
+    assert_not_nil ssh_record['logcheck_pattern'], 'SSH record should have pattern'
 
     # Check sudo alert record
     sudo_record = filtered_records.find { |r| r['message'].include?('command not allowed') }
-    assert_not_nil sudo_record, "Sudo alert record should be present"
-    assert_true sudo_record['logcheck_alert'], "Sudo record should be marked as alert"
-    assert_equal 'violations', sudo_record['logcheck_rule_type'], "Sudo should be violations type"
+    assert_not_nil sudo_record, 'Sudo alert record should be present'
+    assert_true sudo_record['logcheck_alert'], 'Sudo record should be marked as alert'
+    assert_equal 'violations', sudo_record['logcheck_rule_type'], 'Sudo should be violations type'
 
     # Check pass-through record
     app_record = filtered_records.find { |r| r['message'].include?('myapp') }
-    assert_not_nil app_record, "Application record should be present"
-    assert_nil app_record['logcheck_alert'], "Application record should not be marked as alert"
+    assert_not_nil app_record, 'Application record should be present'
+    assert_nil app_record['logcheck_alert'], 'Application record should not be marked as alert'
 
     # Verify systemd message was dropped (ignored)
     systemd_record = filtered_records.find { |r| r['message'].include?('systemd') }
-    assert_nil systemd_record, "Systemd record should be dropped (ignored)"
+    assert_nil systemd_record, 'Systemd record should be dropped (ignored)'
   end
 
   def test_rule_precedence_in_action
     # Test that cracking rules take precedence over ignore rules
-    config = %[
+    config = %(
       rules_dir #{@temp_dir}
       recursive_scan true
       mark_matches true
-    ]
+    )
     
     d = create_driver(config)
     
@@ -108,23 +108,23 @@ class EndToEndFilteringTest < Test::Unit::TestCase
     end
 
     filtered_records = d.filtered_records
-    assert_equal 1, filtered_records.size, "Should have one record"
+    assert_equal 1, filtered_records.size, 'Should have one record'
     
     record = filtered_records.first
-    assert_true record['logcheck_alert'], "Should be marked as alert (not ignored)"
-    assert_equal 'cracking', record['logcheck_rule_type'], "Should be cracking type"
+    assert_true record['logcheck_alert'], 'Should be marked as alert (not ignored)'
+    assert_equal 'cracking', record['logcheck_rule_type'], 'Should be cracking type'
   end
 
   def test_performance_with_many_rules
     # Create a larger rule set for performance testing
     create_large_rule_set
     
-    config = %[
+    config = %(
       rules_dir #{@temp_dir}
       recursive_scan true
       mark_matches false
       log_rule_errors false
-    ]
+    )
     
     d = create_driver(config)
     
@@ -145,10 +145,10 @@ class EndToEndFilteringTest < Test::Unit::TestCase
     processing_time = end_time - start_time
     
     # Should process 100 messages in reasonable time
-    assert_operator processing_time, :<, 1.0, "Should process 100 messages within 1 second"
+    assert_operator processing_time, :<, 1.0, 'Should process 100 messages within 1 second'
     
     # All messages should pass through (no matching rules)
-    assert_equal 100, d.filtered_records.size, "All messages should pass through"
+    assert_equal 100, d.filtered_records.size, 'All messages should pass through'
   end
 
   private
