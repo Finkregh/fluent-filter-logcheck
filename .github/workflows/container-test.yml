@@ -38,8 +38,7 @@ jobs:
           timeout 30s bash -c '
             last_output_time=$(date +%s)
             while IFS= read -r line; do
-              echo "$line"
-              echo "$line" >> container_output.log
+              tee "$line" -a container_output.log
               last_output_time=$(date +%s)
             done < container_logs.pipe &
             READER_PID=$!
