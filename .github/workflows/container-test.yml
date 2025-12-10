@@ -1,8 +1,8 @@
 name: Container Test
 
 on:
-  push:
-    branches: [main, develop]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -31,7 +31,7 @@ jobs:
           mkfifo container_logs.pipe
 
           # Start container in background and redirect output to pipe
-          docker run --rm fluent-logcheck-test -c /fluentd/etc/fluentd-test.conf > container_logs.pipe 2>&1 &
+          docker run --rm -v $(pwd)/test/container-files/fluentd-test.conf:/fluentd/etc/fluentd-test.conf fluent-logcheck-test -c /fluentd/etc/fluentd-test.conf > container_logs.pipe 2>&1 &
           CONTAINER_PID=$!
 
           # Read from pipe with timeout
