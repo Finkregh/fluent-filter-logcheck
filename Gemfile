@@ -6,7 +6,7 @@ source 'https://rubygems.org'
 gemspec
 
 group :development, :test do
-  gem 'brakeman', '~> 6.0'
+  gem 'brakeman', '~> 7.0'
   gem 'bundler', '~> 2.0'
   gem 'bundler-audit', '~> 0.8'
   gem 'openssl', '~> 3.3.2', require: false # macOS OpenSSL compatibility
