@@ -97,7 +97,7 @@ jobs:
           bundle exec brakeman --force --format plain
 
       - name: Upload Brakeman report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: always()
         with:
           name: brakeman-report
@@ -151,7 +151,7 @@ jobs:
           path: code-coverage-results.md
 
       - name: Upload coverage reports
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: coverage-report
           path: coverage/
@@ -176,7 +176,7 @@ jobs:
           gem build fluent-plugin-logcheck.gemspec
 
       - name: Upload gem artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: gem-package
           path: "*.gem"
@@ -197,7 +197,7 @@ jobs:
           bundler-cache: true
 
       - name: Download gem artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: gem-package
 
