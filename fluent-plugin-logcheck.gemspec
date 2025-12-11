@@ -14,16 +14,20 @@ Gem::Specification.new do |spec|
   spec.homepage      = 'https://github.com/finkregh/fluent-plugin-logcheck'
   spec.license       = 'Apache-2.0'
 
-  spec.files         = Dir[
-    'lib/**/*',
-    'README.md',
-    'CHANGELOG.md',
-    'LICENSE',
-    'fluent-plugin-logcheck.gemspec',
-    'examples/**/*',
-    'docs/**/*'
-  ]
-  spec.bindir        = 'exe'
+  spec.files         = Dir.chdir(__dir__) do
+    Dir[
+      'lib/**/*',
+      'README.md',
+      'CHANGELOG.md',
+      'LICENSE',
+      'fluent-plugin-logcheck.gemspec',
+      'examples/**/*',
+      'docs/**/*'
+    ].select do |f|
+      File.file?(f) && !f.start_with?(*%w(test/ spec/ features/ .git .circleci appveyor Gemfile))
+    end
+  end
+  # spec.bindir        = 'exe'
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
 
@@ -31,4 +35,5 @@ Gem::Specification.new do |spec|
 
   # Runtime dependencies
   spec.add_dependency 'fluentd', ['>= 0.14.10', '< 2']
+  spec.add_dependency 'sorbet-runtime', '~> 0.5'
 end
