@@ -38,7 +38,7 @@ jobs:
           timeout --kill-after=7s 5s docker run --rm \
             -v "$(pwd)/test/container-files:/etc/fluent/logcheck" \
             fluent-logcheck-test \
-            fluentd -vv --dry-run -c /etc/fluent/logcheck/fluentd-test.conf \
+            fluentd -vv -c /etc/fluent/logcheck/fluentd-test.conf \
             > test1_output.log 2>&1
           EXIT_CODE=$?
 
@@ -83,7 +83,7 @@ jobs:
           timeout --kill-after=7s 5s docker run --rm \
             -v "$(pwd)/test/container-files:/etc/fluent/logcheck" \
             fluent-logcheck-test \
-            fluentd -vv --dry-run -c /etc/fluent/logcheck/fluentd-test-ssh-ignore.conf \
+            fluentd -vv -c /etc/fluent/logcheck/fluentd-test-ssh-ignore.conf \
             > test2_output.log 2>&1
           EXIT_CODE=$?
 
@@ -142,7 +142,7 @@ jobs:
           timeout --kill-after=7s 5s docker run --rm \
             -v "$(pwd)/test/container-files:/etc/fluent/logcheck" \
             fluent-logcheck-test \
-            fluentd -vv --dry-run -c /etc/fluent/logcheck/fluentd-test-cracking.conf \
+            fluentd -vv -c /etc/fluent/logcheck/fluentd-test-cracking.conf \
             > test3_output.log 2>&1
           EXIT_CODE=$?
 
@@ -187,7 +187,7 @@ jobs:
           timeout --kill-after=7s 5s docker run --rm \
             -v "$(pwd)/test/container-files:/etc/fluent/logcheck" \
             fluent-logcheck-test \
-            fluentd -vv --dry-run -c /etc/fluent/logcheck/fluentd-test-violations.conf \
+            fluentd -vv -c /etc/fluent/logcheck/fluentd-test-violations.conf \
             > test4_output.log 2>&1
           EXIT_CODE=$?
 
@@ -240,7 +240,7 @@ jobs:
           timeout --kill-after=12s 10s docker run --rm \
             -v "$(pwd)/test/container-files:/etc/fluent/logcheck" \
             fluent-logcheck-test \
-            fluentd -vv --dry-run -c /etc/fluent/logcheck/fluentd-test-multi-rules.conf \
+            fluentd -vv -c /etc/fluent/logcheck/fluentd-test-multi-rules.conf \
             > test5_output.log 2>&1
           EXIT_CODE=$?
 

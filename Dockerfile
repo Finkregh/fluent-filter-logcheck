@@ -23,7 +23,8 @@ RUN mkdir -p /etc/fluent/conf.d /etc/fluent/logcheck \
     && cd .. \
     && rm -rf ./fluent-plugin-logcheck \
     && chown -R fluent:fluent /etc/fluent \
-    && fluent-gem search --local fluent.\*
+    && fluent-gem search --local fluent.\* \
+    && fluentd -vv -c /dev/null --dry-run
 
 # Copy custom entrypoint script
 COPY docker-entrypoint.sh /usr/local/bin/
