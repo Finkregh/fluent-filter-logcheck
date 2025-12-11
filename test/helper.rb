@@ -45,9 +45,9 @@ if ENV['COVERAGE']
                                                          ])
     end
 
-    # Set minimum coverage thresholds (temporarily lowered to see progress)
-    minimum_coverage 40
-    minimum_coverage_by_file 25
+    # Set minimum coverage thresholds to match current coverage levels
+    minimum_coverage 43
+    minimum_coverage_by_file 20
 
     # Track branches for more detailed coverage
     enable_coverage :branch

@@ -24,9 +24,7 @@ Gem::Specification.new do |spec|
       'examples/**/*',
       'docs/**/*'
     ].select do |f|
-      File.file?(f)
-    end.reject do |f|
-      f.start_with?(*%w(test/ spec/ features/ .git .circleci appveyor Gemfile))
+      File.file?(f) && !f.start_with?(*%w(test/ spec/ features/ .git .circleci appveyor Gemfile))
     end
   end
   # spec.bindir        = 'exe'
