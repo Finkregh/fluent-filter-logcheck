@@ -22,92 +22,317 @@ jobs:
           echo "Building container from test/Dockerfile..."
           docker build -t fluent-logcheck-test -f test/Dockerfile .
 
-      - name: Run container with timeout and capture logs
-        id: run_container
+      # Test 1: Basic SSH ignore functionality
+      - name: Test 1 - Basic SSH Ignore Rules
         run: |
-          echo "Starting container with 5-second timeout for no output..."
+          echo "=== TEST 1: Basic SSH Ignore Rules ==="
 
-          # Create a named pipe for log capture
-          mkfifo container_logs.pipe
+          # Run container with timeout and capture exit code
+          timeout --kill-after=7s 5s docker run --rm \
+            -v "$(pwd)/test/container-files:/etc/fluentd/logcheck" \
+            fluent-logcheck-test \
+            -c /etc/fluentd/logcheck/fluentd-test.conf \
+            > test1_output.log 2>&1
+          EXIT_CODE=$?
 
-          # Start container in background and redirect output to pipe
-          docker run --rm -v $(pwd)/test/container-files/fluentd-test.conf:/fluentd/etc/fluentd-test.conf fluent-logcheck-test -c /fluentd/etc/fluentd-test.conf > container_logs.pipe 2>&1 &
-          CONTAINER_PID=$!
-
-          # Read from pipe with timeout
-          timeout 30s bash -c '
-            last_output_time=$(date +%s)
-            while IFS= read -r line; do
-              tee "$line" -a container_output.log
-              last_output_time=$(date +%s)
-            done < container_logs.pipe &
-            READER_PID=$!
-            
-            # Monitor for 5 seconds of no output
-            while kill -0 $READER_PID 2>/dev/null; do
-              current_time=$(date +%s)
-              if [ $((current_time - last_output_time)) -ge 5 ]; then
-                echo "No output for 5 seconds, stopping container..."
-                break
-              fi
-              sleep 1
-            done
-            
-            # Kill the reader process
-            kill $READER_PID 2>/dev/null || true
-          ' || true
-
-          # Stop the container
-          docker stop $(docker ps -q --filter ancestor=fluent-logcheck-test) 2>/dev/null || true
-
-          # Clean up
-          rm -f container_logs.pipe
-
-          echo "Container execution completed."
-
-      - name: Display captured logs
-        run: |
-          echo "=== CAPTURED CONTAINER LOGS ==="
-          if [ -f container_output.log ]; then
-            cat container_output.log
+          echo "Container exit code: $EXIT_CODE"
+          if [ $EXIT_CODE -eq 124 ]; then
+            echo "✅ Container timed out as expected (exit code 124)"
+          elif [ $EXIT_CODE -eq 0 ]; then
+            echo "✅ Container completed successfully (exit code 0)"
           else
-            echo "No logs captured"
+            echo "⚠️  Container exited with unexpected code: $EXIT_CODE"
           fi
-          echo "=== END OF LOGS ==="
 
-      - name: Analyze logs for required patterns
+          echo "=== TEST 1 OUTPUT ==="
+          cat test1_output.log
+          echo "=== END TEST 1 OUTPUT ==="
+
+      - name: Validate Test 1 Results
         run: |
-          echo "Analyzing logs for required patterns..."
+          echo "Validating Test 1 results..."
 
-          if [ ! -f container_output.log ]; then
-            echo "❌ ERROR: No log file found"
+          # Check that SSH error message is filtered out (should NOT appear)
+          if grep -q "fatal: recv_rexec_state: ssh_msg_recv failed" test1_output.log; then
+            echo "❌ FAIL: SSH error message was not filtered out"
+            exit 1
+          else
+            echo "✅ PASS: SSH error message correctly filtered out"
+          fi
+
+          # Check that other fatal message passes through (should appear)
+          if grep -q "fatal: some other message" test1_output.log; then
+            echo "✅ PASS: Non-SSH fatal message passed through"
+          else
+            echo "❌ FAIL: Non-SSH fatal message was incorrectly filtered"
             exit 1
           fi
 
-          # Check that logs do NOT contain the ssh error message
-          if grep -q "fatal: recv_rexec_state: ssh_msg_recv failed" container_output.log; then
-            echo "❌ FAIL: Logs contain forbidden message: 'fatal: recv_rexec_state: ssh_msg_recv failed'"
-            echo "This message should be filtered out by the logcheck plugin."
-            exit 1
+      # Test 2: Comprehensive SSH ignore rules
+      - name: Test 2 - Comprehensive SSH Ignore Rules
+        run: |
+          echo "=== TEST 2: Comprehensive SSH Ignore Rules ==="
+
+          timeout --kill-after=7s 5s docker run --rm \
+            -v "$(pwd)/test/container-files:/etc/fluentd/logcheck" \
+            fluent-logcheck-test \
+            -c /etc/fluentd/logcheck/fluentd-test-ssh-ignore.conf \
+            > test2_output.log 2>&1
+          EXIT_CODE=$?
+
+          echo "Container exit code: $EXIT_CODE"
+          if [ $EXIT_CODE -eq 124 ]; then
+            echo "✅ Container timed out as expected (exit code 124)"
+          elif [ $EXIT_CODE -eq 0 ]; then
+            echo "✅ Container completed successfully (exit code 0)"
           else
-            echo "✅ PASS: Logs do not contain forbidden ssh error message"
+            echo "⚠️  Container exited with unexpected code: $EXIT_CODE"
           fi
 
-          # Check that logs DO contain the expected fatal message
-          if grep -q "fatal: some other message" container_output.log; then
-            echo "✅ PASS: Logs contain expected message: 'fatal: some other message'"
+          echo "=== TEST 2 OUTPUT ==="
+          cat test2_output.log
+          echo "=== END TEST 2 OUTPUT ==="
+
+      - name: Validate Test 2 Results
+        run: |
+          echo "Validating Test 2 results..."
+
+          # Most SSH messages should be filtered out
+          ssh_messages_found=0
+          if grep -q "Accepted password for user1" test2_output.log; then
+            ssh_messages_found=$((ssh_messages_found + 1))
+          fi
+          if grep -q "Failed password for invalid user hacker" test2_output.log; then
+            ssh_messages_found=$((ssh_messages_found + 1))
+          fi
+          if grep -q "Connection closed by" test2_output.log; then
+            ssh_messages_found=$((ssh_messages_found + 1))
+          fi
+          if grep -q "fatal: recv_rexec_state: ssh_msg_recv failed" test2_output.log; then
+            ssh_messages_found=$((ssh_messages_found + 1))
+          fi
+
+          if [ $ssh_messages_found -eq 0 ]; then
+            echo "✅ PASS: SSH messages correctly filtered out"
           else
-            echo "❌ FAIL: Logs do not contain expected message: 'fatal: some other message'"
-            echo "Expected to find this message in the output."
+            echo "❌ FAIL: $ssh_messages_found SSH messages were not filtered"
             exit 1
           fi
 
-          echo "🎉 All log pattern checks passed!"
+          # Non-SSH message should pass through
+          if grep -q "This message should pass through" test2_output.log; then
+            echo "✅ PASS: Non-SSH message passed through"
+          else
+            echo "❌ FAIL: Non-SSH message was incorrectly filtered"
+            exit 1
+          fi
 
-      - name: Upload logs as artifact
+      # Test 3: Cracking rules (security alerts)
+      - name: Test 3 - Cracking Rules (Security Alerts)
+        run: |
+          echo "=== TEST 3: Cracking Rules (Security Alerts) ==="
+
+          timeout --kill-after=7s 5s docker run --rm \
+            -v "$(pwd)/test/container-files:/etc/fluentd/logcheck" \
+            fluent-logcheck-test \
+            -c /etc/fluentd/logcheck/fluentd-test-cracking.conf \
+            > test3_output.log 2>&1
+          EXIT_CODE=$?
+
+          echo "Container exit code: $EXIT_CODE"
+          if [ $EXIT_CODE -eq 124 ]; then
+            echo "✅ Container timed out as expected (exit code 124)"
+          elif [ $EXIT_CODE -eq 0 ]; then
+            echo "✅ Container completed successfully (exit code 0)"
+          else
+            echo "⚠️  Container exited with unexpected code: $EXIT_CODE"
+          fi
+
+          echo "=== TEST 3 OUTPUT ==="
+          cat test3_output.log
+          echo "=== END TEST 3 OUTPUT ==="
+
+      - name: Validate Test 3 Results
+        run: |
+          echo "Validating Test 3 results..."
+
+          # Security threats should generate alerts (pass through with alert metadata)
+          if grep -q "Oversized packet received" test3_output.log; then
+            echo "✅ PASS: Security threat detected and alerted"
+          else
+            echo "❌ FAIL: Security threat was not detected"
+            exit 1
+          fi
+
+          # Normal messages should pass through
+          if grep -q "Regular application message" test3_output.log; then
+            echo "✅ PASS: Normal message passed through"
+          else
+            echo "❌ FAIL: Normal message was filtered incorrectly"
+            exit 1
+          fi
+
+      # Test 4: Violations rules (policy alerts)
+      - name: Test 4 - Violations Rules (Policy Alerts)
+        run: |
+          echo "=== TEST 4: Violations Rules (Policy Alerts) ==="
+
+          timeout --kill-after=7s 5s docker run --rm \
+            -v "$(pwd)/test/container-files:/etc/fluentd/logcheck" \
+            fluent-logcheck-test \
+            -c /etc/fluentd/logcheck/fluentd-test-violations.conf \
+            > test4_output.log 2>&1
+          EXIT_CODE=$?
+
+          echo "Container exit code: $EXIT_CODE"
+          if [ $EXIT_CODE -eq 124 ]; then
+            echo "✅ Container timed out as expected (exit code 124)"
+          elif [ $EXIT_CODE -eq 0 ]; then
+            echo "✅ Container completed successfully (exit code 0)"
+          else
+            echo "⚠️  Container exited with unexpected code: $EXIT_CODE"
+          fi
+
+          echo "=== TEST 4 OUTPUT ==="
+          cat test4_output.log
+          echo "=== END TEST 4 OUTPUT ==="
+
+      - name: Validate Test 4 Results
+        run: |
+          echo "Validating Test 4 results..."
+
+          # Policy violations should generate alerts
+          violations_found=0
+          if grep -q "session opened for user root" test4_output.log; then
+            violations_found=$((violations_found + 1))
+          fi
+          if grep -q "authentication failure" test4_output.log; then
+            violations_found=$((violations_found + 1))
+          fi
+
+          if [ $violations_found -gt 0 ]; then
+            echo "✅ PASS: Policy violations detected and alerted ($violations_found found)"
+          else
+            echo "❌ FAIL: Policy violations were not detected"
+            exit 1
+          fi
+
+          # Normal application message should pass through
+          if grep -q "Normal application activity" test4_output.log; then
+            echo "✅ PASS: Normal application message passed through"
+          else
+            echo "❌ FAIL: Normal application message was filtered incorrectly"
+            exit 1
+          fi
+
+      # Test 5: Multi-rule priority system
+      - name: Test 5 - Multi-Rule Priority System
+        run: |
+          echo "=== TEST 5: Multi-Rule Priority System ==="
+
+          timeout --kill-after=12s 10s docker run --rm \
+            -v "$(pwd)/test/container-files:/etc/fluentd/logcheck" \
+            fluent-logcheck-test \
+            -c /etc/fluentd/logcheck/fluentd-test-multi-rules.conf \
+            > test5_output.log 2>&1
+          EXIT_CODE=$?
+
+          echo "Container exit code: $EXIT_CODE"
+          if [ $EXIT_CODE -eq 124 ]; then
+            echo "✅ Container timed out as expected (exit code 124)"
+          elif [ $EXIT_CODE -eq 0 ]; then
+            echo "✅ Container completed successfully (exit code 0)"
+          else
+            echo "⚠️  Container exited with unexpected code: $EXIT_CODE"
+          fi
+
+          echo "=== TEST 5 OUTPUT ==="
+          cat test5_output.log
+          echo "=== END TEST 5 OUTPUT ==="
+
+      - name: Validate Test 5 Results
+        run: |
+          echo "Validating Test 5 results..."
+
+          # Check rule loading
+          if grep -q "rules loaded" test5_output.log; then
+            echo "✅ PASS: Rules loaded successfully"
+          else
+            echo "⚠️  WARNING: Rule loading message not found"
+          fi
+
+          # Security threats (cracking) should be alerted with highest priority
+          if grep -q "Oversized packet received" test5_output.log; then
+            echo "✅ PASS: Cracking rule detected (highest priority)"
+          else
+            echo "❌ FAIL: Cracking rule not detected"
+            exit 1
+          fi
+
+          # Policy violations should be alerted
+          if grep -q "session opened for user root" test5_output.log; then
+            echo "✅ PASS: Violations rule detected"
+          else
+            echo "❌ FAIL: Violations rule not detected"
+            exit 1
+          fi
+
+          # SSH messages should be ignored (lowest priority)
+          ssh_ignored=0
+          if ! grep -q "Accepted password for user1" test5_output.log; then
+            ssh_ignored=$((ssh_ignored + 1))
+          fi
+          if ! grep -q "Failed password for invalid user hacker" test5_output.log; then
+            ssh_ignored=$((ssh_ignored + 1))
+          fi
+          if ! grep -q "fatal: recv_rexec_state: ssh_msg_recv failed" test5_output.log; then
+            ssh_ignored=$((ssh_ignored + 1))
+          fi
+
+          if [ $ssh_ignored -ge 2 ]; then
+            echo "✅ PASS: SSH messages correctly ignored (rule priority working)"
+          else
+            echo "❌ FAIL: SSH messages not properly ignored"
+            exit 1
+          fi
+
+          # Normal application message should pass through
+          if grep -q "Normal application message that should pass through" test5_output.log; then
+            echo "✅ PASS: Normal message passed through"
+          else
+            echo "❌ FAIL: Normal message was filtered incorrectly"
+            exit 1
+          fi
+
+          # Check for alert metadata if mark_matches is enabled
+          if grep -q "logcheck_" test5_output.log; then
+            echo "✅ PASS: Alert metadata found"
+          else
+            echo "⚠️  INFO: Alert metadata not found (may be expected)"
+          fi
+
+      - name: Final Test Summary
+        run: |
+          echo "🎉 All container tests completed successfully!"
+          echo ""
+          echo "Test Summary:"
+          echo "✅ Test 1: Basic SSH ignore functionality"
+          echo "✅ Test 2: Comprehensive SSH ignore rules"
+          echo "✅ Test 3: Cracking rules (security alerts)"
+          echo "✅ Test 4: Violations rules (policy alerts)"
+          echo "✅ Test 5: Multi-rule priority system"
+          echo ""
+          echo "The fluent-plugin-logcheck container is working correctly!"
+
+      - name: Upload all test logs as artifacts
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: container-logs
-          path: container_output.log
+          name: container-test-logs
+          path: |
+            test1_output.log
+            test2_output.log
+            test3_output.log
+            test4_output.log
+            test5_output.log
           retention-days: 7

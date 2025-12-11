@@ -3,6 +3,9 @@
 FROM fluent/fluentd:edge-debian
 USER root
 
+# provides logcheck rules in e.g. /etc/logcheck/ignore.d.server
+RUN apt-get update && apt-get install -y logcheck-database && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 COPY ./ /tmp/fluent-plugin-logcheck
 WORKDIR /tmp
 # RUN ls -la /tmp/fluent-plugin-logcheck
