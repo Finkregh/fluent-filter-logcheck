@@ -19,8 +19,15 @@ jobs:
 
       - name: Build container
         run: |
-          echo "Building container from test/Dockerfile..."
-          docker build -t fluent-logcheck-test -f test/Dockerfile .
+          echo "Building container from root Dockerfile..."
+          docker build -t fluent-logcheck-test .
+
+      - name: Copy test configuration files
+        run: |
+          echo "Copying test configuration files to container..."
+          docker run --rm -v "$(pwd)/test/container-files:/host-files" \
+            fluent-logcheck-test \
+            sh -c "cp -a /host-files/* /etc/fluent/logcheck/"
 
       # Test 1: Basic SSH ignore functionality
       - name: Test 1 - Basic SSH Ignore Rules
@@ -29,9 +36,9 @@ jobs:
 
           # Run container with timeout and capture exit code
           timeout --kill-after=7s 5s docker run --rm \
-            -v "$(pwd)/test/container-files:/etc/fluentd/logcheck" \
+            -v "$(pwd)/test/container-files:/etc/fluent/logcheck" \
             fluent-logcheck-test \
-            -c /etc/fluentd/logcheck/fluentd-test.conf \
+            fluentd -vv --dry-run -c /etc/fluent/logcheck/fluentd-test.conf \
             > test1_output.log 2>&1
           EXIT_CODE=$?
 
@@ -74,9 +81,9 @@ jobs:
           echo "=== TEST 2: Comprehensive SSH Ignore Rules ==="
 
           timeout --kill-after=7s 5s docker run --rm \
-            -v "$(pwd)/test/container-files:/etc/fluentd/logcheck" \
+            -v "$(pwd)/test/container-files:/etc/fluent/logcheck" \
             fluent-logcheck-test \
-            -c /etc/fluentd/logcheck/fluentd-test-ssh-ignore.conf \
+            fluentd -vv --dry-run -c /etc/fluent/logcheck/fluentd-test-ssh-ignore.conf \
             > test2_output.log 2>&1
           EXIT_CODE=$?
 
@@ -133,9 +140,9 @@ jobs:
           echo "=== TEST 3: Cracking Rules (Security Alerts) ==="
 
           timeout --kill-after=7s 5s docker run --rm \
-            -v "$(pwd)/test/container-files:/etc/fluentd/logcheck" \
+            -v "$(pwd)/test/container-files:/etc/fluent/logcheck" \
             fluent-logcheck-test \
-            -c /etc/fluentd/logcheck/fluentd-test-cracking.conf \
+            fluentd -vv --dry-run -c /etc/fluent/logcheck/fluentd-test-cracking.conf \
             > test3_output.log 2>&1
           EXIT_CODE=$?
 
@@ -178,9 +185,9 @@ jobs:
           echo "=== TEST 4: Violations Rules (Policy Alerts) ==="
 
           timeout --kill-after=7s 5s docker run --rm \
-            -v "$(pwd)/test/container-files:/etc/fluentd/logcheck" \
+            -v "$(pwd)/test/container-files:/etc/fluent/logcheck" \
             fluent-logcheck-test \
-            -c /etc/fluentd/logcheck/fluentd-test-violations.conf \
+            fluentd -vv --dry-run -c /etc/fluent/logcheck/fluentd-test-violations.conf \
             > test4_output.log 2>&1
           EXIT_CODE=$?
 
@@ -231,9 +238,9 @@ jobs:
           echo "=== TEST 5: Multi-Rule Priority System ==="
 
           timeout --kill-after=12s 10s docker run --rm \
-            -v "$(pwd)/test/container-files:/etc/fluentd/logcheck" \
+            -v "$(pwd)/test/container-files:/etc/fluent/logcheck" \
             fluent-logcheck-test \
-            -c /etc/fluentd/logcheck/fluentd-test-multi-rules.conf \
+            fluentd -vv --dry-run -c /etc/fluent/logcheck/fluentd-test-multi-rules.conf \
             > test5_output.log 2>&1
           EXIT_CODE=$?
 
