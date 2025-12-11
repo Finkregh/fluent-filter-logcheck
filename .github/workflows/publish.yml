@@ -62,18 +62,23 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch,prefix=
+            type=ref,event=tag,prefix=
+            type=sha,format=short,prefix=
+            type=sha,format=long,prefix=
+
       - name: Build and push Docker image
         id: push
         uses: docker/build-push-action@9e436ba9f2d7bcd1d038c8e55d039d37896ddc5d
         with:
           context: .
           push: true
-          tags: |
-            type=ref,event=branch,prefix=
-            type=ref,event=tag,prefix=
-            type=sha,format=short,prefix=
-            type=sha,format=long,prefix=
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          provenance: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           build-args: |
             BUILDTIME=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
             VERSION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
