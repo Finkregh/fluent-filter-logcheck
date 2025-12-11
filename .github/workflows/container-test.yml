@@ -59,16 +59,17 @@ jobs:
         run: |
           echo "Validating Test 1 results..."
 
-          # Check that SSH error message is filtered out (should NOT appear)
-          if grep -q "fatal: recv_rexec_state: ssh_msg_recv failed" test1_output.log; then
+          # Check that SSH error message is filtered out (should NOT appear in actual log output)
+          # Use more specific pattern to avoid matching debug messages
+          if grep -E "example-logcheck\.ignore.*fatal: recv_rexec_state: ssh_msg_recv failed" test1_output.log; then
             echo "❌ FAIL: SSH error message was not filtered out"
             exit 1
           else
             echo "✅ PASS: SSH error message correctly filtered out"
           fi
 
-          # Check that other fatal message passes through (should appear)
-          if grep -q "fatal: some other message" test1_output.log; then
+          # Check that other fatal message passes through (should appear in actual log output)
+          if grep -E "example-logcheck\.ignore.*fatal: some other message" test1_output.log; then
             echo "✅ PASS: Non-SSH fatal message passed through"
           else
             echo "❌ FAIL: Non-SSH fatal message was incorrectly filtered"
@@ -104,18 +105,18 @@ jobs:
         run: |
           echo "Validating Test 2 results..."
 
-          # Most SSH messages should be filtered out
+          # Most SSH messages should be filtered out (check actual log output, not debug messages)
           ssh_messages_found=0
-          if grep -q "Accepted password for user1" test2_output.log; then
+          if grep -E "ssh-logcheck\.ignore.*Accepted password for user1" test2_output.log; then
             ssh_messages_found=$((ssh_messages_found + 1))
           fi
-          if grep -q "Failed password for invalid user hacker" test2_output.log; then
+          if grep -E "ssh-logcheck\.ignore.*Failed password for invalid user hacker" test2_output.log; then
             ssh_messages_found=$((ssh_messages_found + 1))
           fi
-          if grep -q "Connection closed by" test2_output.log; then
+          if grep -E "ssh-logcheck\.ignore.*Connection closed by" test2_output.log; then
             ssh_messages_found=$((ssh_messages_found + 1))
           fi
-          if grep -q "fatal: recv_rexec_state: ssh_msg_recv failed" test2_output.log; then
+          if grep -E "ssh-logcheck\.ignore.*fatal: recv_rexec_state: ssh_msg_recv failed" test2_output.log; then
             ssh_messages_found=$((ssh_messages_found + 1))
           fi
 
@@ -126,8 +127,8 @@ jobs:
             exit 1
           fi
 
-          # Non-SSH message should pass through
-          if grep -q "This message should pass through" test2_output.log; then
+          # Non-SSH message should pass through (check actual log output)
+          if grep -E "ssh-logcheck\.ignore.*This message should pass through" test2_output.log; then
             echo "✅ PASS: Non-SSH message passed through"
           else
             echo "❌ FAIL: Non-SSH message was incorrectly filtered"
@@ -164,15 +165,16 @@ jobs:
           echo "Validating Test 3 results..."
 
           # Security threats should generate alerts (pass through with alert metadata)
-          if grep -q "Oversized packet received" test3_output.log; then
+          # Check actual log output, not debug messages
+          if grep -E "cracking-logcheck\.test.*Oversized packet received" test3_output.log; then
             echo "✅ PASS: Security threat detected and alerted"
           else
             echo "❌ FAIL: Security threat was not detected"
             exit 1
           fi
 
-          # Normal messages should pass through
-          if grep -q "Regular application message" test3_output.log; then
+          # Normal messages should pass through (check actual log output)
+          if grep -E "cracking-logcheck\.test.*Regular application message" test3_output.log; then
             echo "✅ PASS: Normal message passed through"
           else
             echo "❌ FAIL: Normal message was filtered incorrectly"
@@ -208,12 +210,12 @@ jobs:
         run: |
           echo "Validating Test 4 results..."
 
-          # Policy violations should generate alerts
+          # Policy violations should generate alerts (check actual log output)
           violations_found=0
-          if grep -q "session opened for user root" test4_output.log; then
+          if grep -E "violations-logcheck\.test.*session opened for user root" test4_output.log; then
             violations_found=$((violations_found + 1))
           fi
-          if grep -q "authentication failure" test4_output.log; then
+          if grep -E "violations-logcheck\.test.*authentication failure" test4_output.log; then
             violations_found=$((violations_found + 1))
           fi
 
@@ -224,8 +226,8 @@ jobs:
             exit 1
           fi
 
-          # Normal application message should pass through
-          if grep -q "Normal application activity" test4_output.log; then
+          # Normal application message should pass through (check actual log output)
+          if grep -E "violations-logcheck\.test.*Normal application activity" test4_output.log; then
             echo "✅ PASS: Normal application message passed through"
           else
             echo "❌ FAIL: Normal application message was filtered incorrectly"
@@ -268,31 +270,31 @@ jobs:
             echo "⚠️  WARNING: Rule loading message not found"
           fi
 
-          # Security threats (cracking) should be alerted with highest priority
-          if grep -q "Oversized packet received" test5_output.log; then
+          # Security threats (cracking) should be alerted with highest priority (check actual log output)
+          if grep -E "multi-logcheck\.test.*Oversized packet received" test5_output.log; then
             echo "✅ PASS: Cracking rule detected (highest priority)"
           else
             echo "❌ FAIL: Cracking rule not detected"
             exit 1
           fi
 
-          # Policy violations should be alerted
-          if grep -q "session opened for user root" test5_output.log; then
+          # Policy violations should be alerted (check actual log output)
+          if grep -E "multi-logcheck\.test.*session opened for user root" test5_output.log; then
             echo "✅ PASS: Violations rule detected"
           else
             echo "❌ FAIL: Violations rule not detected"
             exit 1
           fi
 
-          # SSH messages should be ignored (lowest priority)
+          # SSH messages should be ignored (lowest priority) - check they don't appear in actual log output
           ssh_ignored=0
-          if ! grep -q "Accepted password for user1" test5_output.log; then
+          if ! grep -E "multi-logcheck\.test.*Accepted password for user1" test5_output.log; then
             ssh_ignored=$((ssh_ignored + 1))
           fi
-          if ! grep -q "Failed password for invalid user hacker" test5_output.log; then
+          if ! grep -E "multi-logcheck\.test.*Failed password for invalid user hacker" test5_output.log; then
             ssh_ignored=$((ssh_ignored + 1))
           fi
-          if ! grep -q "fatal: recv_rexec_state: ssh_msg_recv failed" test5_output.log; then
+          if ! grep -E "multi-logcheck\.test.*fatal: recv_rexec_state: ssh_msg_recv failed" test5_output.log; then
             ssh_ignored=$((ssh_ignored + 1))
           fi
 
@@ -303,8 +305,8 @@ jobs:
             exit 1
           fi
 
-          # Normal application message should pass through
-          if grep -q "Normal application message that should pass through" test5_output.log; then
+          # Normal application message should pass through (check actual log output)
+          if grep -E "multi-logcheck\.test.*Normal application message that should pass through" test5_output.log; then
             echo "✅ PASS: Normal message passed through"
           else
             echo "❌ FAIL: Normal message was filtered incorrectly"
