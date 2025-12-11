@@ -74,8 +74,6 @@ jobs:
             type=sha,format=short,prefix=
             type=sha,format=long,prefix=
           labels: ${{ steps.meta.outputs.labels }}
-          publish-ghcr: true
-          publish-dockerhub: false
           build-args: |
             BUILDTIME=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
             VERSION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
