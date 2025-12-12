@@ -1,4 +1,4 @@
-name: Publish gem and container image
+name: Publish container image
 
 on:
   workflow_dispatch:
@@ -8,31 +8,6 @@ on:
       - '*'
 
 jobs:
-  build-publish-gem:
-    name: Build + Publish Gem to GPR
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
-      contents: read
-
-    steps:
-      - uses: actions/checkout@v5
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-      - run: bundle install
-
-      - name: Publish to GPR
-        run: |
-          mkdir -p "$HOME/.gem"
-          touch "$HOME/.gem/credentials"
-          chmod 0600 "$HOME/.gem/credentials"
-          printf -- "---\n:github: %s\n" "${GEM_HOST_API_KEY}" > "$HOME/.gem/credentials"
-          gem build ./*.gemspec
-          gem push --KEY github --host "https://rubygems.pkg.github.com/${OWNER}" ./*.gem
-        env:
-          GEM_HOST_API_KEY: "Bearer ${{secrets.GITHUB_TOKEN}}"
-          OWNER: ${{ github.repository_owner }}
-
   build-publish-container:
     name: Build + Publish Container Image to GH registry
     runs-on: ubuntu-latest

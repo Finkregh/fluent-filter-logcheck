@@ -1,4 +1,4 @@
-name: Release
+name: Publish gem
 
 on:
   push:
@@ -10,9 +10,6 @@ on:
         description: "Version to release (e.g., 1.0.1)"
         required: true
         type: string
-
-env:
-  RUBY_VERSION: "3.1"
 
 jobs:
   validate:
@@ -26,7 +23,6 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: ${{ env.RUBY_VERSION }}
           bundler-cache: true
 
       - name: Run full test suite
@@ -58,7 +54,6 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: ${{ env.RUBY_VERSION }}
           bundler-cache: true
 
       - name: Configure Git
@@ -134,7 +129,6 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: ${{ env.RUBY_VERSION }}
           bundler-cache: true
 
       - name: Extract version from tag
