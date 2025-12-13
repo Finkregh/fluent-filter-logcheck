@@ -2,6 +2,20 @@
 
 A powerful Fluentd filter plugin that applies logcheck rules for intelligent log filtering and alerting. This plugin enables you to use existing logcheck rule files to automatically filter out noise from your logs while highlighting important security events and system violations.
 
+## Installation
+
+Gem: <https://github.com/users/Finkregh/packages/rubygems/package/fluent-plugin-logcheck>
+
+Container image: <https://github.com/users/Finkregh/packages/container/package/fluent-filter-logcheck>
+
+```shell
+# latest development version
+docker pull ghcr.io/finkregh/fluent-filter-logcheck:main
+
+# tagged release
+docker pull ghcr.io/finkregh/fluent-filter-logcheck:0.1
+```
+
 ## Features
 
 - **Logcheck Rule Compatibility**: Uses standard logcheck rule files (ignore.d, cracking.d, violations.d)
