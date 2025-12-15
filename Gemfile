@@ -9,7 +9,7 @@ group :development, :test do
   gem 'brakeman', '~> 7.0'
   gem 'bundler' # , '~> 4.0' # Having this specified here requires additional steps to first update bundler itself. Sheesh.
   gem 'bundler-audit', '~> 0.8'
-  gem 'openssl', '~> 3.3.2', require: false # macOS OpenSSL compatibility
+  gem 'openssl', '~> 4.0.0', require: false # macOS OpenSSL compatibility
   gem 'rake', '~> 13.0'
   gem 'rubocop', '~> 1.0'
   gem 'rubocop-packaging', '~> 0.6'
