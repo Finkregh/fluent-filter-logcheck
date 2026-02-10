@@ -76,12 +76,10 @@ jobs:
             exit 1
           fi
 
-      # Test 2: Comprehensive SSH ignore rules
-      - name: Test 2 - Comprehensive SSH Ignore Rules
+      # Test 2: SSH ignore rules
+      - name: Test 2 - SSH Ignore Rules
         run: |
-          echo "=== TEST 2: Comprehensive SSH Ignore Rules ==="
-
-          EXIT_CODE=0
+          echo "=== TEST 2: SSH Ignore Rules ==="
           timeout --kill-after=7s 5s docker run --rm \
             -v "$(pwd)/test/container-files:/etc/fluent/logcheck" \
             fluent-logcheck-test \
@@ -326,7 +324,7 @@ jobs:
           echo ""
           echo "Test Summary:"
           echo "✅ Test 1: Basic SSH ignore functionality"
-          echo "✅ Test 2: Comprehensive SSH ignore rules"
+          echo "✅ Test 2: SSH ignore rules"
           echo "✅ Test 3: Cracking rules (security alerts)"
           echo "✅ Test 4: Violations rules (policy alerts)"
           echo "✅ Test 5: Multi-rule priority system"

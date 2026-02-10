@@ -1,6 +1,6 @@
 # fluent-plugin-logcheck/Dockerfile
 
-FROM fluent/fluentd:edge-debian
+FROM fluent/fluentd:v1.19-2
 USER root
 
 # Environment variable for additional gem installation
@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y logcheck-database && apt-get clean && r
 
 # Copy the plugin source code
 COPY ./ /tmp/fluent-plugin-logcheck
+
 WORKDIR /tmp
 
 # Build and install the fluent-plugin-logcheck

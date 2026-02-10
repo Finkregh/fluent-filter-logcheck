@@ -309,7 +309,7 @@ module Fluent
             log.debug "Attempting to load rule source: #{path}"
             log.debug "File.exist?(#{path}): #{File.exist?(path)}"
             log.debug "File.file?(#{path}): #{File.file?(path)}"
-            
+
             if File.file?(path)
               rule_set = rule_loader.load_file(path, type, max_rules: @max_rules_per_file)
               @rule_sets[path] = rule_set
