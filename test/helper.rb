@@ -112,6 +112,7 @@ module TestUtils
   def create_temp_file(content, filename = 'test_rules')
     file = Tempfile.new(filename)
     file.write(content)
+    file.flush  # Explicitly flush before closing
     file.close
     file.path
   end
