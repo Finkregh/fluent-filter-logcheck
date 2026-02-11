@@ -91,15 +91,8 @@ module Fluent
         # @raise [PatternCompileError] If regex compilation fails
         sig { returns(Regexp) }
         def compile_pattern
-          # Suppress Ruby 3.3+ warnings about character classes in POSIX bracket expressions
-          # These warnings are false positives for valid POSIX patterns like [[:digit:]]
-          original_verbosity = $VERBOSE
-          $VERBOSE = nil
-          result = Regexp.new(@raw_pattern)
-          $VERBOSE = original_verbosity
-          result
+          Regexp.new(@raw_pattern)
         rescue RegexpError => e
-          $VERBOSE = original_verbosity
           raise PatternCompileError,
                 "Invalid regex pattern '#{@raw_pattern}' in #{@source_file}:#{@line_number}: #{e.message}"
         end

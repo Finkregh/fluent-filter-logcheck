@@ -305,11 +305,6 @@ module Fluent
           log.debug "Loading advanced rule source #{index + 1}: #{path} (type: #{type || 'auto'}, recursive: #{recursive})" if @debug_mode
 
           begin
-            # Diagnostic logging for Ruby 3.3 debugging
-            log.debug "Attempting to load rule source: #{path}"
-            log.debug "File.exist?(#{path}): #{File.exist?(path)}"
-            log.debug "File.file?(#{path}): #{File.file?(path)}"
-
             if File.file?(path)
               rule_set = rule_loader.load_file(path, type, max_rules: @max_rules_per_file)
               @rule_sets[path] = rule_set
@@ -325,7 +320,6 @@ module Fluent
               log.info "Loaded #{rule_sets.sum(&:size)} rules from #{rule_sets.size} files in directory: #{path}"
             else
               log.warn "Rule source not found: #{path}"
-              log.debug "Neither file nor directory: #{path}"
             end
           rescue StandardError => e
             log.error "Error loading rule source #{path}: #{e.message}"
