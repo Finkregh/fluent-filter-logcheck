@@ -23,4 +23,6 @@ group :development, :test do
   gem 'sorbet-runtime', '~> 0.5'
   gem 'tapioca', require: false
   gem 'test-unit', '~> 3.0'
+  gem 'redcarpet', '~> 3.6', '>= 3.6.1'
+  gem 'rdoc', '~> 7.2'
 end
