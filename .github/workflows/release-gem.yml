@@ -1,4 +1,4 @@
-name: Publish gem
+name: Create release with changelog and publish gem
 
 on:
   push:
