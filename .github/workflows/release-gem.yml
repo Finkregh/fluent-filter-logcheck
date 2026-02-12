@@ -11,6 +11,11 @@ on:
         required: true
         type: string
 
+# Issue #8: Add concurrency control to prevent simultaneous releases
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   validate:
     name: Validate Release
@@ -25,11 +30,27 @@ jobs:
         with:
           bundler-cache: true
 
+      # Issue #15: Validate version doesn't already exist on RubyGems
+      - name: Check version doesn't exist on RubyGems
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION=${GITHUB_REF#refs/tags/v}
+          fi
+          echo "Checking if version $VERSION exists on RubyGems..."
+          if gem list -r fluent-plugin-logcheck | grep -q "($VERSION)"; then
+            echo "❌ Error: Version $VERSION already exists on RubyGems"
+            exit 1
+          fi
+          echo "✅ Version $VERSION is available"
+
       - name: Run full test suite
         run: bundle exec rake test
 
-      - name: Run security scan
-        run: bundle exec brakeman --force
+      # Issue #6: Replace brakeman with bundle-audit for dependency security scanning
+      - name: Run security audit
+        run: bundle exec bundle-audit check --update
 
       - name: Run linting
         run: bundle exec rubocop
@@ -44,6 +65,10 @@ jobs:
     permissions:
       contents: write
       packages: write
+    # Issue #3: Add outputs for version info (needed by notify job)
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
 
     steps:
       - name: Checkout code
@@ -72,6 +97,20 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=v$VERSION" >> $GITHUB_OUTPUT
 
+      # Issue #2: Create and push tag for workflow_dispatch
+      - name: Create and push tag (workflow_dispatch only)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          # Check if tag already exists
+          if git rev-parse ${{ steps.version.outputs.tag }} >/dev/null 2>&1; then
+            echo "⚠️  Tag ${{ steps.version.outputs.tag }} already exists, using existing tag"
+          else
+            echo "Creating tag ${{ steps.version.outputs.tag }}"
+            git tag -a ${{ steps.version.outputs.tag }} -m "Release ${{ steps.version.outputs.version }}"
+            git push origin ${{ steps.version.outputs.tag }}
+            echo "✅ Tag created and pushed"
+          fi
+
       - name: Update version in gemspec
         run: |
           sed -i "s/spec.version.*=.*/spec.version       = '${{ steps.version.outputs.version }}'/" fluent-plugin-logcheck.gemspec
@@ -80,6 +119,14 @@ jobs:
         run: |
           gem build fluent-plugin-logcheck.gemspec
 
+      # Issue #3: Upload gem as artifact for reuse in publish job
+      - name: Upload gem artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gem-package
+          path: fluent-plugin-logcheck-${{ steps.version.outputs.version }}.gem
+          retention-days: 30
+
       - name: Generate changelog
         id: changelog
         run: |
@@ -87,35 +134,32 @@ jobs:
             # Extract changelog for this version
             awk '/^## \[${{ steps.version.outputs.version }}\]/{flag=1; next} /^## \[/{flag=0} flag' CHANGELOG.md > release_notes.md
             if [ ! -s release_notes.md ]; then
+              echo "::warning::No changelog entry found for version ${{ steps.version.outputs.version }}"
               echo "## Changes in ${{ steps.version.outputs.version }}" > release_notes.md
               echo "- See commit history for detailed changes" >> release_notes.md
             fi
           else
+            echo "::warning::CHANGELOG.md not found"
             echo "## Release ${{ steps.version.outputs.version }}" > release_notes.md
             echo "- See commit history for detailed changes" >> release_notes.md
           fi
 
+          # Show what will be in release notes
+          echo "### Release Notes Preview" >> $GITHUB_STEP_SUMMARY
+          cat release_notes.md >> $GITHUB_STEP_SUMMARY
+
+      # Issue #1: Replace deprecated actions with softprops/action-gh-release@v2
       - name: Create GitHub Release
         id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
-          release_name: Release ${{ steps.version.outputs.version }}
+          name: Release ${{ steps.version.outputs.version }}
           body_path: release_notes.md
+          files: fluent-plugin-logcheck-${{ steps.version.outputs.version }}.gem
           draft: false
           prerelease: false
-
-      - name: Upload gem to release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./fluent-plugin-logcheck-${{ steps.version.outputs.version }}.gem
-          asset_name: fluent-plugin-logcheck-${{ steps.version.outputs.version }}.gem
-          asset_content_type: application/octet-stream
+          fail_on_unmatched_files: true
 
   publish:
     name: Publish to RubyGems
@@ -124,27 +168,13 @@ jobs:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+      # Issue #3: Download gem artifact instead of rebuilding
+      - name: Download gem artifact
+        uses: actions/download-artifact@v4
         with:
-          bundler-cache: true
+          name: gem-package
 
-      - name: Extract version from tag
-        id: version
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Update version in gemspec
-        run: |
-          sed -i "s/spec.version.*=.*/spec.version       = '${{ steps.version.outputs.version }}'/" fluent-plugin-logcheck.gemspec
-
-      - name: Build gem
-        run: gem build fluent-plugin-logcheck.gemspec
-
+      # Issue #7: Add credentials cleanup step
       - name: Setup RubyGems credentials
         run: |
           mkdir -p ~/.gem
@@ -156,7 +186,12 @@ jobs:
 
       - name: Publish to RubyGems
         run: |
-          gem push fluent-plugin-logcheck-${{ steps.version.outputs.version }}.gem
+          gem push fluent-plugin-logcheck-${{ needs.release.outputs.version }}.gem
+
+      # Issue #7: Cleanup credentials even if publish fails
+      - name: Cleanup credentials
+        if: always()
+        run: rm -f ~/.gem/credentials
 
   notify:
     name: Post-Release Notification
@@ -165,14 +200,38 @@ jobs:
     if: always()
 
     steps:
-      - name: Notify success
-        if: ${{ needs.release.result == 'success' }}
+      # Issue #14: Enhanced notifications with GitHub Step Summary
+      - name: Generate release summary
         run: |
-          echo "🎉 Release completed successfully!"
-          echo "Version: ${{ needs.release.outputs.version }}"
+          echo "# 🎉 Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: ${{ needs.release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag**: ${{ needs.release.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [[ "${{ needs.release.result }}" == "success" ]]; then
+            echo "✅ GitHub Release: **Created**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ GitHub Release: **Failed**" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          if [[ "${{ needs.publish.result }}" == "success" ]]; then
+            echo "✅ RubyGems: **Published**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "🔗 [View on RubyGems](https://rubygems.org/gems/fluent-plugin-logcheck/versions/${{ needs.release.outputs.version }})" >> $GITHUB_STEP_SUMMARY
+          elif [[ "${{ needs.publish.result }}" == "skipped" ]]; then
+            echo "⏭️  RubyGems: **Skipped** (manual dispatch)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ RubyGems: **Failed**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "## Rollback Instructions" >> $GITHUB_STEP_SUMMARY
+            echo "1. Delete GitHub release: \`gh release delete ${{ needs.release.outputs.tag }} -y\`" >> $GITHUB_STEP_SUMMARY
+            echo "2. Delete git tag: \`git push --delete origin ${{ needs.release.outputs.tag }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "3. Fix issues and re-release" >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Notify failure
         if: ${{ needs.release.result == 'failure' || needs.publish.result == 'failure' }}
         run: |
-          echo "❌ Release process failed. Please check the logs."
+          echo "❌ Release process failed. Please check the logs and summary above."
           exit 1
