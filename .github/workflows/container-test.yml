@@ -332,7 +332,7 @@ jobs:
           echo "The fluent-plugin-logcheck container is working correctly!"
 
       - name: Upload all test logs as artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: container-test-logs
