@@ -114,6 +114,9 @@ module TestUtils
     file.write(content)
     file.flush # Explicitly flush before closing
     file.close
+    # Keep file object to prevent auto-deletion
+    @tempfile_objects ||= []
+    @tempfile_objects << file
     file.path
   end
 
@@ -135,6 +138,11 @@ module TestUtils
         FileUtils.rm_f(path)
       end
     end
+    # Clean up tempfile objects to allow garbage collection
+    return unless defined?(@tempfile_objects) && @tempfile_objects
+
+    @tempfile_objects.clear
+    @tempfile_objects = nil
   end
 
   # Create sample logcheck rules for testing

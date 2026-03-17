@@ -483,7 +483,7 @@ class ConfigurationBranchesTest < Test::Unit::TestCase
     d = create_driver(config)
     # Verify conversion to symbols
     assert_equal %i(cracking violations ignore), d.instance.rule_priority
-    assert_true d.instance.rule_priority.all? { |type| type.is_a?(Symbol) }
+    assert_true d.instance.rule_priority.all?(Symbol)
   end
 
   def test_rule_priority_default_value
