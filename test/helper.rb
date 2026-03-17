@@ -140,7 +140,7 @@ module TestUtils
     end
     # Clean up tempfile objects to allow garbage collection
     return unless defined?(@tempfile_objects) && @tempfile_objects
-    
+
     @tempfile_objects.clear
     @tempfile_objects = nil
   end
