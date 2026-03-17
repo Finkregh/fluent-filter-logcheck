@@ -139,10 +139,10 @@ module TestUtils
       end
     end
     # Clean up tempfile objects to allow garbage collection
-    if defined?(@tempfile_objects) && @tempfile_objects
-      @tempfile_objects.clear
-      @tempfile_objects = nil
-    end
+    return unless defined?(@tempfile_objects) && @tempfile_objects
+    
+    @tempfile_objects.clear
+    @tempfile_objects = nil
   end
 
   # Create sample logcheck rules for testing
