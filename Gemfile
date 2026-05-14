@@ -25,4 +25,6 @@ group :development, :test do
   gem 'sorbet-runtime', '~> 0.5'
   gem 'tapioca', require: false
   gem 'test-unit', '~> 3.0'
+  gem 'yard', '~> 0.9'
+  gem 'yard-sorbet', '~> 0.9'
 end
