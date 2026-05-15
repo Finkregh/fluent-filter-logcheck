@@ -4,7 +4,11 @@ require 'bundler'
 require 'bundler/gem_tasks'
 require 'rake/testtask'
 require 'rubocop/rake_task'
-require 'yard'
+begin
+  require 'yard'
+rescue LoadError
+  nil
+end
 Bundler::GemHelper.install_tasks
 
 Rake::TestTask.new(:test) do |test|
@@ -80,14 +84,16 @@ task :clean do
   sh 'rm -rf tmp/'
 end
 
-desc 'Run YARD documentation generation'
-task :yard do
-  YARD::Rake::YardocTask.new
-end
+if defined?(YARD)
+  desc 'Run YARD documentation generation'
+  task :yard do
+    YARD::Rake::YardocTask.new
+  end
 
-desc 'Check YARD documentation coverage'
-task 'yard:stats' do
-  sh 'bundle exec yard stats --list-undoc'
+  desc 'Check YARD documentation coverage'
+  task 'yard:stats' do
+    sh 'bundle exec yard stats --list-undoc'
+  end
 end
 
 desc 'Run integration tests'
