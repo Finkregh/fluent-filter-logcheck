@@ -11,7 +11,7 @@ group :development, :test do
   gem 'bundler-audit', '~> 0.8'
   gem 'openssl', '~> 4.0.0', require: false # macOS OpenSSL compatibility
   gem 'rake', '~> 13.0'
-  gem 'rdoc', '~> 7.2'
+  gem 'rdoc', '~> 8.0'
   gem 'redcarpet', '~> 3.6', '>= 3.6.1'
   gem 'rubocop', '~> 1.0'
   gem 'rubocop-packaging', '~> 0.6'
