@@ -19,7 +19,7 @@ group :development, :test do
   gem 'rubocop-rake', '~> 0.7'
   gem 'rubocop-sorbet', '~> 0.11'
   gem 'simplecov', '~> 1.0'
-  gem 'simplecov-cobertura', '~> 3.0'
+  gem 'simplecov-cobertura', '~> 4.0'
   gem 'simplecov-lcov', '~> 0.9'
   gem 'sorbet', '~> 0.5'
   gem 'sorbet-runtime', '~> 0.5'
